@@ -1,0 +1,15 @@
+# Arm platform geometry. All values in metres / radians.
+# Frames: X forward (Amiga driving direction), Y left, Z up.
+# platform_link origin: top front edge of the Amiga back rail, centred in Y.
+
+platform:
+  # Height of platform_link above the floor (standalone use only).
+  # 0.503 = rail top in the Amiga URDF (ground_clearance + wheel_radius + chassis_height).
+  height: 0.503
+  plank: {length: 0.575, width: 0.190, thickness: 0.025}
+
+arm:
+  # Lite 6 link_base relative to platform_link: centre of the vertical plank's front face.
+  xyz: [0.025, 0.0, -0.095]
+  # Base axis along +X, cable ports pointing up.
+  rpy: [0.0, 1.5708, 0.0]

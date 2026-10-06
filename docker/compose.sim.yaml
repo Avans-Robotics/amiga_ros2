@@ -1,0 +1,12 @@
+# Laptop override for simulation (Gazebo, RViz):
+#   docker compose -f compose.yaml -f compose.sim.yaml up -d
+# Renders on the GPU that drives the laptop desktop (Intel/Mesa via /dev/dri).
+# Using the NVIDIA GPU here made GL fall back to software rendering and
+# disturbed an external screen driven by the NVIDIA GPU (reverse PRIME).
+services:
+  ros:
+    restart: "no"
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - ROS_DOMAIN_ID=1   # keep the sim separate from the real robot on the same network

@@ -39,6 +39,31 @@ For GUI tools (RViz) over RDP, pass the RDP display:
 docker exec -it -e DISPLAY=:1 amiga-ros bash
 ```
 
+## Simulation (laptop)
+
+Gazebo and RViz run on a laptop, using the same image plus `docker/compose.sim.yaml` (desktop GPU via `/dev/dri`, ROS domain 1 so it stays separate from the robot).
+
+```bash
+cd docker
+docker compose -f compose.yaml -f compose.sim.yaml up -d --build
+xhost +local:
+docker exec -it amiga-ros bash
+# inside the container
+cd /ros2_ws && colcon build --packages-select amiga_description --symlink-install && source install/setup.bash
+ros2 launch amiga_description display.launch.py    # RViz with joint sliders
+ros2 launch amiga_description gazebo.launch.py     # Gazebo with the Lite 6 trajectory controller
+```
+
+`src/` is mounted into the container, so edits on the host are picked up after a `colcon build` (no image rebuild).
+
+## Arm platform description
+
+`src/amiga_description` models the arm platform: two 575 x 190 x 25 mm planks at 90 degrees on the Amiga back rail, with the Lite 6 on the vertical plank pointing forward (+X).
+All geometry and the arm pose live in `src/amiga_description/config/arm_platform.yaml`; change values there after measuring.
+`platform_link` sits on the top front edge of the rail, so the same macro can later be attached to the Amiga's `base_link`.
+
+On the robot, `display.launch.py use_real_arm:=true` mirrors the real arm from `/ufactory/joint_states`.
+
 ## Remote access
 
 RDP to the Orin desktop (e.g. Remmina from a laptop on the robot network), SSH as `hcr@10.95.76.50`.

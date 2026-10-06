@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<robot name="arm_platform" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- The arm platform on its own, fixed to the world at rail height. -->
+  <xacro:arg name="config" default="$(find amiga_description)/config/arm_platform.yaml"/>
+  <xacro:arg name="ros2_control_plugin" default="uf_robot_hardware/UFRobotSystemHardware"/>
+  <xacro:arg name="robot_ip" default="10.95.76.155"/>
+
+  <xacro:include filename="$(find amiga_description)/urdf/arm_platform.xacro"/>
+
+  <link name="world"/>
+
+  <xacro:arm_platform parent="world"
+    xyz="0 0 ${xacro.load_yaml('$(arg config)')['platform']['height']}" rpy="0 0 0"
+    config="$(arg config)"
+    ros2_control_plugin="$(arg ros2_control_plugin)"
+    robot_ip="$(arg robot_ip)"/>
+
+</robot>

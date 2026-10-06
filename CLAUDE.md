@@ -7,6 +7,9 @@ ROS 2 Jazzy workspace for a farm-ng Amiga with a UFactory Lite 6 arm and an OAK-
 - Never commit secrets. The competition workspace (`../Amiga_ws`) contains credentials: copy individual files from it, never its git history.
 - Pull external code (xarm_ros2, micro-ROS-Agent) via the Dockerfile or a `.repos` file with pinned versions, do not vendor it.
 
+- Simulation runs on the laptop (`docker/compose.sim.yaml`, ROS domain 1); the Orin is for the real arm only.
+- Arm platform geometry and arm pose: `src/amiga_description/config/arm_platform.yaml`, the single source of truth.
+
 Known gotchas:
 
 - micro-ROS agent has no apt package for Jazzy: build it from source (micro-ROS-Agent, jazzy branch).
@@ -14,3 +17,4 @@ Known gotchas:
 - Include the OAK-D in the URDF via the depthai_camera macro and do not start `camera.launch.py`: it runs its own robot_state_publisher and duplicates TF frames.
 - Gamepad and Portenta (`/dev/portenta`) in Docker need `/dev` and `/run/udev` mounted plus `device_cgroup_rules` for majors 13 (input) and 166 (ttyACM).
 - Build with `-j2` / 2 colcon workers: the Orin NX runs out of memory otherwise.
+- In Gazebo, xarm's `lite6_controllers.yaml` is loaded automatically by its xacro (`load_gazebo_plugin`); controllers are `joint_state_broadcaster` and `lite6_traj_controller`.

@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Two planks screwed together at 90 degrees, with a Lite 6 on the vertical one.
+       platform_link origin: top front edge of the rail the top plank rests on.
+       Geometry and arm pose come from config/arm_platform.yaml. -->
+  <xacro:macro name="arm_platform" params="parent xyz rpy config ros2_control_plugin robot_ip">
+    <xacro:property name="cfg" value="${xacro.load_yaml(config)}"/>
+    <xacro:property name="plank" value="${cfg['platform']['plank']}"/>
+    <xacro:property name="L" value="${plank['length']}"/>
+    <xacro:property name="W" value="${plank['width']}"/>
+    <xacro:property name="T" value="${plank['thickness']}"/>
+    <xacro:property name="arm" value="${cfg['arm']}"/>
+
+    <material name="plank_wood">
+      <color rgba="0.76 0.60 0.42 1.0"/>
+    </material>
+
+    <xacro:macro name="plank_box" params="origin size">
+      <visual>
+        <origin xyz="${origin}"/>
+        <geometry><box size="${size}"/></geometry>
+        <material name="plank_wood"/>
+      </visual>
+      <collision>
+        <origin xyz="${origin}"/>
+        <geometry><box size="${size}"/></geometry>
+      </collision>
+    </xacro:macro>
+
+    <link name="platform_link">
+      <!-- Top plank: flat on the rail, front edge flush with the vertical plank's front face. -->
+      <xacro:plank_box origin="${T - W/2} 0 ${T/2}" size="${W} ${L} ${T}"/>
+      <!-- Vertical plank: hangs under the top plank's front edge, against the rail's front face. -->
+      <xacro:plank_box origin="${T/2} 0 ${-W/2}" size="${T} ${L} ${W}"/>
+      <inertial>
+        <origin xyz="${T/2 - W/4} 0 ${T/2 - W/4}"/>
+        <mass value="3.0"/>
+        <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
+      </inertial>
+    </link>
+
+    <joint name="platform_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="platform_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <xacro:include filename="$(find xarm_description)/urdf/xarm_device_macro.xacro"/>
+    <xacro:xarm_device robot_type="lite" dof="6"
+      attach_to="platform_link" create_attach_link="false"
+      attach_xyz="${' '.join(map(str, arm['xyz']))}"
+      attach_rpy="${' '.join(map(str, arm['rpy']))}"
+      ros2_control_plugin="${ros2_control_plugin}" load_gazebo_plugin="true"
+      robot_ip="${robot_ip}"/>
+  </xacro:macro>
+
+</robot>
