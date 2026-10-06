@@ -127,6 +127,10 @@ After changing the file:
 1. Rebuild (only needed once per new file; with `--symlink-install` edits are picked up directly) and check in RViz with `display.launch.py`.
 2. **Also set the mount angle in UFactory Studio** to match (90° sideways, 0° upright). The arm uses it for gravity compensation and collision detection; a wrong value makes it drift or trigger false collision stops.
 
+How MoveIt gets the pose: xarm's MoveIt model has no platform, so `moveit_real.launch.py` combines `platform` and `arm` into one pose of the arm base relative to the world (currently `0.025 0 0.408`, rpy `pi 1.5708 pi`, which equals `0 1.5708 0`). Check the maths with `python3 src/amiga_description/launch/moveit_real.launch.py`.
+
+Known xarm issue: its MoveIt launch passes the rpy to `static_transform_publisher` as roll-pitch-yaw, while that tool expects yaw-pitch-roll. This is harmless as long as roll equals yaw (true for both mounts above). For other mounts the static TF can disagree with the URDF.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
