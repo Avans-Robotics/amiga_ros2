@@ -6,3 +6,6 @@ log/
 # secrets: commit *.example templates only
 .env
 *credentials*
+
+# python
+__pycache__/

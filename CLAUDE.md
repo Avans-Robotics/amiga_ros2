@@ -18,3 +18,7 @@ Known gotchas:
 - Gamepad and Portenta (`/dev/portenta`) in Docker need `/dev` and `/run/udev` mounted plus `device_cgroup_rules` for majors 13 (input) and 166 (ttyACM).
 - Build with `-j2` / 2 colcon workers: the Orin NX runs out of memory otherwise.
 - In Gazebo, xarm's `lite6_controllers.yaml` is loaded automatically by its xacro (`load_gazebo_plugin`); controllers are `joint_state_broadcaster` and `lite6_traj_controller`.
+- Non-interactive `docker exec amiga-ros bash -c ...` does not source ROS (no .bashrc). Use `docker exec -w /ros2_ws amiga-ros /ros_entrypoint.sh <cmd>`.
+- xarm's MoveIt launch passes `attach_rpy` to `static_transform_publisher` as roll pitch yaw, but that tool expects yaw pitch roll. Harmless while roll == yaw (current mounts); otherwise the static TF disagrees with the URDF.
+- `moveit_real.launch.py` composes platform and arm pose into one world -> link_base pose because xarm's MoveIt model has no platform. Self-check: `python3 moveit_real.launch.py`.
+- Do not start the real-arm launch from automation: it switches the arm to servo mode. The user runs it with someone at the e-stop.
