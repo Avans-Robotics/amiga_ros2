@@ -1,0 +1,20 @@
+services:
+  ros:
+    build:
+      context: .
+      args:
+        AMIGA_REPO: ""        # git URL of the Amiga control repo (empty = skip)
+        AMIGA_BRANCH: "main"
+    image: amiga-ros:jazzy
+    container_name: amiga-ros
+    restart: unless-stopped   # start again after an Orin reboot
+    network_mode: host        # needed for ROS 2 (DDS), OAK-D PoE and the Lite 6
+    ipc: host
+    environment:
+      - ROS_DOMAIN_ID=0
+      - DISPLAY=${DISPLAY:-:0}   # GUI (RViz) on the Orin desktop / RDP
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    stdin_open: true
+    tty: true
+    command: sleep infinity    # for now: keep the container running, enter with 'docker exec'
