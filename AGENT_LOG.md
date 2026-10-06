@@ -27,4 +27,4 @@ Backup for the Orin before it ships Thursday. Instead of a disk image: documente
 ### State
 Branch feat/docker-and-docs. Static IP, pin file, ports and installed packages checked against the live Orin over SSH. Restore procedure itself not executed (UNVERIFIED as a full run). RDP credential setup not readable without sudo, documented as a manual step. Uncommitted.
 ### Open items
-Customer network decision, Tailscale login, repo URL in host/README.md once the repo is on GitHub.
+Customer network decision, Tailscale login, GitHub access for the Orin if the repo is private (deploy key or token).
