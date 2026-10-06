@@ -43,6 +43,10 @@ docker exec -it -e DISPLAY=:1 amiga-ros bash
 
 RDP to the Orin desktop (e.g. Remmina from a laptop on the robot network), SSH as `hcr@10.95.76.50`.
 
+## Host setup
+
+Rebuilding the Orin from the stock Seeed image: see [host/README.md](host/README.md).
+
 ## Status
 
 Verified on the robot: ROS 2 connects to the arm, the camera publishes, camera images show in RViz over RDP.
@@ -52,8 +56,8 @@ Verified on the robot: ROS 2 connects to the arm, the camera publishes, camera i
 Before the arm unit ships to the customer:
 
 - Network at the customer site. Without the GL.iNet the robot has no WiFi or internet: only a cable with manual IP settings works, and Tailscale cannot connect. Proposal: a second GL.iNet on the robot.
-- Tailscale for remote access (depends on the network item).
-- Full disk image backup of the Orin (the customer gets sudo).
+- Tailscale for remote access (installed, not logged in; depends on the network item).
+- Orin restore path: stock Seeed image + [host/README.md](host/README.md). A full disk image is optional.
 
 ROS 2:
 
