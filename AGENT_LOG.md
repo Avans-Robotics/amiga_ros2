@@ -48,3 +48,21 @@ URDF for what ships Thursday: two planks + Lite 6, viewable in Gazebo and RViz o
 Branch feat/arm-description. Validated on the laptop: URDF parses (check_urdf), Gazebo spawns the model at real-time speed with joint_state_broadcaster and lite6_traj_controller active, a test trajectory SUCCEEDED, TF shows the end effector in front of the planks, RViz display launch runs without mesh errors. Not yet visually confirmed by the user; not tested on the Orin with the real arm. Uncommitted.
 ### Open items
 Visual check of RViz/Gazebo by the user; compare arm orientation with the real arm; MoveIt realmove on the Orin; pin xarm_ros2 commit; correct the Amiga URDF from measurements.
+
+## 2026-10-06 MoveIt on the real arm, wrap-up for handover
+### Goal & outcome
+MoveIt plans and executes on the real Lite 6 (confirmed by the user). Wrapped up for a colleague: one-command launch, README run/mount/troubleshooting sections, platform pose configurable.
+### Decisions & why
+- `moveit_real.launch.py` wraps xarm's lite6_moveit_realmove: reads arm_platform.yaml, composes platform and arm pose into the world -> link_base pose (xarm's MoveIt model has no platform) and adds the inner quotes xarm's launch expects. Removes the hand-typed quoting trap and keeps the YAML as single source of truth.
+- `platform.xyz/rpy` replaces `platform.height`: the same keys become the mount pose on the Amiga base_link later.
+- Orin clones the repo with a read-only GitHub deploy key; no personal credentials on the robot (customer gets sudo).
+### Lessons / gotchas
+- xArm driver deactivates the trajectory controller when the arm leaves servo mode (e.g. jogging in UFactory Studio); MoveIt then gets "Goal was rejected". Restart the launch.
+- xarm's launch strips the first/last char of attach_xyz/rpy; unquoted values crash its static TF. It also passes rpy to static_transform_publisher in roll-pitch-yaw order (tool expects yaw-pitch-roll); harmless while roll == yaw.
+- GNOME Terminal inherits groups from the systemd user manager, which survives RDP logout while SSH sessions exist; `newgrp docker` or a reboot applies new groups.
+- Non-interactive `docker exec bash -c` does not source ROS; use /ros_entrypoint.sh.
+- RPY round trips near pitch 90 deg: compare rotation matrices, not rpy numbers ((pi, 1.5708, pi) == (0, 1.5708, 0) for pitch slightly over 90 deg).
+### State
+Branch feat/arm-description. Validated: pose maths self-check passes; wrapper resolves to attach_xyz "0.025 0 0.408", attach_rpy "pi 1.570793 pi", identical to the URDF TF world -> link_base; URDF parses with the new platform keys; launch args resolve. moveit_real.launch.py not yet run against the real arm (UNVERIFIED end to end; the user's manual realmove run with the same pose minus platform height worked).
+### Open items
+User runs moveit_real.launch.py once on the Orin; push branch and PR (user decision); planks as MoveIt collision objects; Amiga URDF from measurements; pin xarm_ros2.
