@@ -1,0 +1,2 @@
+# Amiga Portenta H7 (micro-ROS over USB serial) -> /dev/portenta
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="025b", SYMLINK+="portenta", MODE="0666"

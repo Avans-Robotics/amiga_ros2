@@ -1,0 +1,20 @@
+# PS4 mapping for joy's game_controller_node (SDL indices, same for USB and Bluetooth).
+# Taken from the competition workspace, re-indexed from joy_node to SDL.
+teleop_twist_joy_node:
+  ros__parameters:
+    axis_linear:          # left stick up/down
+      x: 1
+    scale_linear:         # m/s at full stick
+      x: 0.5
+    scale_linear_turbo:
+      x: 1.0
+
+    axis_angular:         # right stick left/right
+      yaw: 2
+    scale_angular:        # rad/s at full stick
+      yaw: 0.5
+    scale_angular_turbo:
+      yaw: 0.5
+
+    enable_button: 9        # L1, deadman: hold to drive
+    enable_turbo_button: 10 # R1, turbo speed

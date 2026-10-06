@@ -10,6 +10,8 @@ ROS 2 Jazzy workspace for the farm-ng Amiga: robot description, gamepad teleop, 
 | Arm | UFactory Lite 6, firmware 2.8.2, mounted at 90° (mount angle set in UFactory Studio) |
 | Camera | Luxonis OAK-D, PoE |
 | Network | PLANET IGS-604HPT-M12 industrial PoE switch, all devices connected to it |
+| Gamepad | PS4 controller over Bluetooth (needs a USB Bluetooth dongle: the Orin has no Bluetooth) |
+| Base | Amiga, driven by its Portenta H7 via micro-ROS over USB (`/dev/portenta`) |
 
 ## Network
 
@@ -24,7 +26,7 @@ All devices have a static IP and work without a router.
 
 ## Docker
 
-`docker/` holds the image `amiga-ros:jazzy`: ROS 2 Jazzy, MoveIt 2, xarm_ros2 (jazzy branch, built from source) and depthai-ros. The container `amiga-ros` restarts automatically after a reboot of the Orin.
+`docker/` holds the image `amiga-ros:jazzy`: ROS 2 Jazzy, MoveIt 2, xarm_ros2 (jazzy branch, built from source), depthai-ros, joy, teleop_twist_joy and the micro-ROS agent (built from source). The container `amiga-ros` restarts automatically after a reboot of the Orin.
 
 On the Orin, the repo lives in `~/amiga_ros2` (cloned with a read-only deploy key, see [host/README.md](host/README.md)). From `~/amiga_ros2/docker`:
 
@@ -103,6 +105,28 @@ Safety first: someone at the arm with the emergency stop in reach. MoveIt does *
 
 Do not jog the arm with UFactory Studio while ROS is in control: Studio switches the arm out of servo mode, the driver then deactivates the trajectory controller and every goal is rejected. Restart the launch file to recover. Viewing in Studio is fine.
 
+## Driving with the PS4 controller (Orin)
+
+Safety first: someone at the Amiga e-stop.
+
+1. Pair the controller once (see [host/README.md](host/README.md#6-ps4-controller-bluetooth)). After that, press the PS button to reconnect.
+2. In the container:
+
+   ```bash
+   ros2 launch amiga_bringup teleop.launch.py
+   ```
+
+| Control | Function |
+|---|---|
+| L1 (hold) | Deadman: the Amiga only moves while it is held |
+| Left stick up/down | Forward/backward, 0.5 m/s at full stick |
+| Right stick left/right | Turn, 0.5 rad/s at full stick |
+| R1 (hold, instead of L1) | Turbo: 1.0 m/s |
+
+Speeds and buttons are in [`src/amiga_bringup/config/ps4.yaml`](src/amiga_bringup/config/ps4.yaml). Indices follow joy's `game_controller_node` (SDL mapping), so they are the same over USB and Bluetooth.
+
+Test without moving the Amiga: `ros2 launch amiga_bringup teleop.launch.py agent:=false`, then `ros2 topic echo /cmd_vel` while holding L1.
+
 ## Adjusting the mount
 
 Everything lives in [`src/amiga_description/config/arm_platform.yaml`](src/amiga_description/config/arm_platform.yaml). RViz, Gazebo and `moveit_real.launch.py` all read it, so there is one place to change. Units are metres and radians; frames are X forward, Y left, Z up.
@@ -139,6 +163,8 @@ Known xarm issue: its MoveIt launch passes the rpy to `static_transform_publishe
 | `ros2: command not found` | You are on the host, not in the container | `docker exec -it -e DISPLAY=:1 amiga-ros bash` first |
 | `Goal was rejected by server` / `ABORTED` in RViz | `lite6_traj_controller` is inactive: the arm left servo mode (UFactory Studio jog, error, collision stop) | Clear errors in Studio, stop jogging there, restart `moveit_real.launch.py` |
 | `Could not find a package configuration file provided by "ament_cmake"` | Non-interactive `docker exec ... bash -c` does not load ROS | Use `docker exec -w /ros2_ws amiga-ros /ros_entrypoint.sh <command>` |
+| No `/cmd_vel` while holding L1 | Controller not connected, or the container started before `/dev` was mounted | `ros2 topic echo /joy`; check `bluetoothctl info <MAC>`; `docker compose up -d` after a compose change |
+| `/cmd_vel` published, Amiga does not move | micro-ROS agent not connected to the Portenta | Agent log must show `session established`; check `ls -l /dev/portenta`; check the Amiga dashboard accepts external (auto) control |
 | RViz window stays empty or tiny | No X access or no GPU access | Run `xhost +local:` on the host first; on the laptop use `compose.sim.yaml` |
 | `Failed to parse yaw argument` from `static_transform_publisher` | `attach_xyz`/`attach_rpy` passed to xarm's launch without inner quotes | Use `moveit_real.launch.py`, which quotes them; by hand: `attach_xyz:='"0.025 0 0.408"'` |
 
@@ -165,7 +191,7 @@ Before the arm unit ships to the customer:
 ROS 2:
 
 - URDF: Amiga + Lite 6 (90° mount) + OAK-D, RealSense and GPS optional and off by default, IMU always on. Arm and camera pose (xyz, rpy) configurable from one YAML per robot. Mounts still need measuring.
-- Teleop: PS4/F710 gamepad + micro-ROS agent, taken over from the competition workspace.
+- Teleop: buy a USB Bluetooth dongle for the Orin, pair the PS4 controller, test driving. F710 config not taken over.
 - MoveIt: planks and the Amiga as collision objects (currently the arm only).
 - Amiga URDF: correct the chassis model from measurements of our Amiga (wheel joints sit below the floor, no rail profile), then mount the platform on it.
 - Pin the xarm_ros2 commit in the Dockerfile (both images are on 3dc2b5e).

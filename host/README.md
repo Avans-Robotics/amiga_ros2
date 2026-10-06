@@ -70,6 +70,39 @@ xhost +local:
 docker exec -it -e DISPLAY=:1 amiga-ros bash
 ```
 
+### 5. Portenta (Amiga base)
+
+udev rule for a stable `/dev/portenta`, used by the micro-ROS agent:
+
+```bash
+sudo cp ~/amiga_ros2/host/99-portenta.rules /etc/udev/rules.d/
+sudo udevadm control --reload && sudo udevadm trigger
+ls -l /dev/portenta    # -> ttyACM0
+```
+
+### 6. PS4 controller (Bluetooth)
+
+The Orin has no Bluetooth on board: plug in a USB Bluetooth dongle (the kernel has `btusb`). The kernel has no `hid_sony` driver; the generic HID driver is enough for sticks and buttons (no rumble, no light bar).
+
+Pair once:
+
+```bash
+bluetoothctl
+  power on
+  agent on
+  default-agent
+  scan on
+  # hold Share + PS until the light bar flashes fast, wait for "Wireless Controller" and its MAC
+  pair <MAC>
+  trust <MAC>      # reconnects on a PS button press from now on
+  connect <MAC>
+  scan off
+  quit
+ls /dev/input/js*  # the controller shows up here
+```
+
+The container sees the controller through the `/dev` mount; no restart needed after connecting.
+
 ## Lab-only tools
 
 Installed on the current Orin for bench testing, not needed to run the robot:
