@@ -12,10 +12,10 @@ platform:
 
 arm:
   # Lite 6 link_base relative to platform_link.
-  # Current mount: upright on the middle of the top plank, cable ports to the back
-  # (mount angle 0 in UFactory Studio). Yaw 3.1416 = cable ports to the front.
+  # Current mount: upright on the middle of the top plank, cable ports to the front
+  # (mount angle 0 in UFactory Studio). Yaw 0.0 = cable ports to the back.
   xyz: [-0.07, 0.0, 0.025]
-  rpy: [0.0, 0.0, 0.0]
+  rpy: [0.0, 0.0, 3.1416]
   # Sideways on the vertical plank's front face, base axis along +X, cable ports up
   # (mount angle 90 in UFactory Studio):
   # xyz: [0.025, 0.0, -0.095]
