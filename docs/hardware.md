@@ -1,0 +1,72 @@
+# Hardware
+
+![Overview, arm side](images/overview-arm-side.jpg)
+
+![Overview, camera side](images/overview-camera-side.jpg)
+
+## Parts
+
+| Part | Details |
+|------|---------|
+| Base | farm-ng Amiga, two batteries (one above each rear wheel), pendant with e-stop. Driven from ROS through its Portenta H7 via micro-ROS over USB (`/dev/portenta`) |
+| Compute | NVIDIA Jetson Orin NX in a Seeed reComputer Robotics J401, Ubuntu 24.04 / JetPack 7.2 |
+| Arm (optional) | UFactory Lite 6, firmware 2.8.2, upright on the wooden arm box, own e-stop |
+| Camera (optional) | Luxonis OAK-D-W-PoE |
+| Network | PLANET IGS-604HPT-M12 industrial PoE switch; GL.iNet travel router for WiFi |
+| Gamepad | Logitech F710 (USB dongle, switch on X), or a PS4 controller over USB or Bluetooth (the Orin has no Bluetooth: needs a USB dongle) |
+
+Everything runs on the Amiga batteries and starts when both battery keys are turned ON. See [Power and charging](power.md).
+
+## Arm box
+
+The wooden arm box sits on the Amiga rail. On top: the Lite 6. On the side: the Orin (black finned box), the Portenta board and the arm e-stop (cuts arm power only).
+
+![Arm box](images/arm-platform.jpg)
+
+![Arm base, Orin and Portenta](images/arm-base-orin-portenta.jpg)
+
+## Camera
+
+The OAK-D is mounted on the crossbar and powered over Ethernet from the switch.
+
+![OAK-D camera](images/camera-oakd.jpg)
+
+## Network
+
+All Ethernet devices (Orin, arm controller, camera, router) connect to the PoE switch. The GL.iNet router gives WiFi access. See [Network and remote access](network.md).
+
+![PoE switch](images/network-poe-switch.jpg)
+
+![GL.iNet router](images/network-glinet-router.jpg)
+
+## Arm platform in the robot model
+
+`src/amiga_description` models the arm platform: two 575 x 190 x 25 mm planks at 90 degrees on the Amiga back rail, with the Lite 6 upright on the middle of the top plank, cable ports to the front.
+`platform_link` sits on the top front edge of the rail, so the same macro can later be attached to the Amiga's `base_link`.
+
+### Adjusting the mount
+
+The mount is set by the user of the robot: measure it and enter it in [`src/amiga_description/config/arm_platform.yaml`](../src/amiga_description/config/arm_platform.yaml). The values shipped are estimates. RViz, Gazebo and `moveit_real.launch.py` all read it, so there is one place to change. Units are metres and radians; frames are X forward, Y left, Z up.
+
+| Key | Meaning |
+|---|---|
+| `platform.xyz`, `platform.rpy` | Pose of `platform_link` (top front edge of the rail) relative to the floor. Later, on the Amiga model: relative to the Amiga `base_link` |
+| `platform.plank` | Plank size |
+| `arm.xyz`, `arm.rpy` | Pose of the Lite 6 base (`link_base`) relative to `platform_link` |
+
+Examples for `arm`:
+
+| Mount | `xyz` | `rpy` |
+|---|---|---|
+| Upright on the middle of the top plank, cable ports to the front (current) | `[-0.07, 0.0, 0.025]` | `[0.0, 0.0, 3.1416]` |
+| Upright on the middle of the top plank, cable ports to the back | `[-0.07, 0.0, 0.025]` | `[0.0, 0.0, 0.0]` |
+| Sideways on the vertical plank, pointing forward, cable ports up | `[0.025, 0.0, -0.095]` | `[0.0, 1.5708, 0.0]` |
+
+For the upright mount, yaw (third `rpy` value) turns the arm around its base axis.
+
+After changing the file:
+
+1. Rebuild (only needed once per new file; with `--symlink-install` edits are picked up directly) and check in RViz with `ros2 launch amiga_description display.launch.py`.
+2. **Also set the mount angle in UFactory Studio** to match (90° sideways, 0° upright). The arm uses it for gravity compensation and collision detection; a wrong value makes it drift or trigger false collision stops.
+
+How MoveIt gets the pose: see [Arm with MoveIt](arm-moveit.md#details-arm-pose-in-moveit).
