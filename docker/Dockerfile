@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-joint-state-publisher-gui \
       ros-jazzy-ros2-control \
       ros-jazzy-ros2-controllers \
+      ros-jazzy-joy \
+      ros-jazzy-teleop-twist-joy \
       git \
       python3-colcon-common-extensions \
       python3-rosdep \
@@ -26,6 +28,12 @@ WORKDIR /ros2_ws
 # --- xArm / Lite 6 driver + MoveIt config (source, jazzy branch) ---
 RUN git clone -b jazzy --recursive --depth 1 \
       https://github.com/xArm-Developer/xarm_ros2.git src/xarm_ros2
+
+# --- micro-ROS agent for the Amiga Portenta (no apt package for Jazzy) ---
+RUN git clone -b jazzy https://github.com/micro-ROS/micro-ROS-Agent.git src/micro-ROS-Agent \
+ && git -C src/micro-ROS-Agent checkout 7c932329ad5591ef23942ef1962534258c16b000 \
+ && git clone -b jazzy https://github.com/micro-ROS/micro_ros_msgs.git src/micro_ros_msgs \
+ && git -C src/micro_ros_msgs checkout b1ef85201e5545d3e07b73f4628bb15836062573
 
 # --- Amiga control (external repo) ---
 # Pass at build time: --build-arg AMIGA_REPO=<git-url>

@@ -40,10 +40,23 @@ def compose(xyz1, rpy1, xyz2, rpy2):
     return xyz.tolist(), matrix_to_rpy(r1 @ rpy_to_matrix(*rpy2))
 
 
+def moveit_rpy(rpy):
+    """xarm feeds attach_rpy to the URDF as roll-pitch-yaw, but to static_transform_publisher
+    as yaw-pitch-roll. Both agree only when roll == yaw, so otherwise the yaw is dropped.
+    """
+    # ponytail: MoveIt's world is then turned by the dropped yaw (fine while it has no
+    # platform or Amiga); fix: patch xarm's static TF or pass rpy without its launch.
+    if math.isclose(rpy[0], rpy[2], abs_tol=1e-6):
+        return rpy
+    print('moveit_real: dropping yaw {:.4f} from the arm pose (xarm rpy order)'.format(rpy[2]))
+    return rpy[0], rpy[1], rpy[0]
+
+
 def launch_setup(context):
     with open(LaunchConfiguration('config').perform(context)) as f:
         cfg = yaml.safe_load(f)
     xyz, rpy = compose(cfg['platform']['xyz'], cfg['platform']['rpy'], cfg['arm']['xyz'], cfg['arm']['rpy'])
+    rpy = moveit_rpy(rpy)
     # xarm's launch strips the outer character of these values, so wrap them in quotes
     fmt = lambda v: '"{}"'.format(' '.join('{:.6f}'.format(x) for x in v))
     return [IncludeLaunchDescription(
@@ -74,4 +87,6 @@ if __name__ == '__main__':
     assert np.allclose(rpy_to_matrix(*rpy), rpy_to_matrix(0, 1.5708, 0)), rpy
     xyz, _ = compose([1, 0, 0], [0, 0, math.pi / 2], [1, 0, 0], [0, 0, 0])
     assert np.allclose(xyz, [1, 1, 0]), xyz
+    assert np.allclose(moveit_rpy((0, 0, 3.1416)), (0, 0, 0))
+    assert np.allclose(moveit_rpy((math.pi, 1.5708, math.pi)), (math.pi, 1.5708, math.pi))
     print('ok')
