@@ -2,15 +2,21 @@
 
 Safety first: someone at the Amiga e-stop (red button above the pendant).
 
-## Pendant
+## Pendant mode
 
-The pendant only accepts drive commands from ROS in AUTO ACTIVE mode. On the pendant, open the **A** (auto) tab and tap **AUTO CONTROL** until it shows AUTO ACTIVE with a blue dot:
+The **A** (auto) tab on the pendant selects who drives. Tap **AUTO CONTROL** to switch:
 
-| AUTO INACTIVE: ROS cannot drive | AUTO ACTIVE: ROS can drive |
+| AUTO INACTIVE: drive with the pendant | AUTO ACTIVE: ROS drives (gamepad, your own software) |
 |---|---|
 | ![Auto inactive](images/pendant-auto-inactive.jpg) | ![Auto active](images/pendant-auto-active.jpg) |
 
-The pendant also shows the commanded and measured speed, which is useful to check that commands arrive.
+In AUTO ACTIVE the pendant shows the commanded and measured speed, which is useful to check that ROS commands arrive.
+
+## Driving with the pendant
+
+1. Set the pendant to AUTO INACTIVE.
+2. Take the pendant off its holder (it stays connected by its cable) and walk alongside the robot.
+3. Drive with the thumbstick. Releasing the thumbstick stops the robot.
 
 ## Gamepad teleop
 
@@ -20,7 +26,7 @@ The pendant also shows the commanded and measured speed, which is useful to chec
 
    Check on the Orin: `ls /dev/input/js*` shows a device.
 2. Check that the Portenta is connected: `ls -l /dev/portenta` shows `-> ttyACM0`.
-3. Set the pendant to AUTO ACTIVE (see above).
+3. Set the pendant to AUTO ACTIVE (see [Pendant mode](#pendant-mode)).
 4. In the [container](docker.md#entering-the-container):
 
    ```bash
