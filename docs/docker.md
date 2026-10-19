@@ -31,12 +31,15 @@ git pull
 docker exec -w /ros2_ws amiga-ros /ros_entrypoint.sh colcon build --symlink-install --packages-select amiga_arm_description amiga_bringup
 ```
 
-If `docker/` changed (Dockerfile or compose file), rebuild the image and recreate the container:
+If `docker/` changed (Dockerfile or compose file), rebuild the image, recreate the container and build the repo packages in the new container:
 
 ```bash
 cd ~/amiga_ros2/docker
-docker compose up -d --build    # takes long on the Orin
+docker compose up -d --build --force-recreate    # takes long on the Orin
+docker exec -w /ros2_ws amiga-ros /ros_entrypoint.sh colcon build --symlink-install --packages-select amiga_arm_description amiga_bringup
 ```
+
+The container is replaced: anything installed by hand inside it is gone.
 
 ## Starting and stopping
 

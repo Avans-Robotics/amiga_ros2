@@ -41,8 +41,8 @@ All Ethernet devices (Orin, arm controller, camera, router) connect to the PoE s
 
 ## Arm platform in the robot model
 
-The robot model is the Amiga from [amiga_description](https://github.com/Avans-Robotics/amiga_description) (a separate, public repo, pinned in the Dockerfile) with the arm platform from `src/amiga_arm_description` on top: two 575 x 190 x 25 mm planks at 90 degrees on the Amiga's rear cross tube, with the Lite 6 upright on the middle of the top plank, cable ports to the front.
-`platform_link` sits on the top front edge of the cross tube and is attached to the Amiga's `base_link` (centre of the wheel axles, at axle height).
+The robot model is the Amiga from [amiga_description](https://github.com/Avans-Robotics/amiga_description) (a separate, public repo, pinned in the Dockerfile) with the arm platform from `src/amiga_arm_description` on top: two 575 x 190 x 25 mm planks at 90 degrees on the Amiga's rear cross tube, with the Lite 6 upright on the middle of the top plank, cable ports towards the vertical plank. The platform is turned 180°: the vertical plank hangs against the rear face of the tube, the top plank points to the front of the Amiga.
+`platform_link` sits on the top edge of the cross tube that the vertical plank hangs against and is attached to the Amiga's `base_link` (centre of the wheel axles, at axle height). Its X axis points from the top plank towards the vertical plank.
 
 ### Adjusting the mount
 
@@ -50,17 +50,24 @@ The mount is set by the user of the robot: measure it and enter it in [`src/amig
 
 | Key | Meaning |
 |---|---|
-| `platform.xyz`, `platform.rpy` | Pose of `platform_link` (top front edge of the rear cross tube) relative to the Amiga `base_link` |
+| `platform.xyz`, `platform.rpy` | Pose of `platform_link` relative to the Amiga `base_link` |
 | `platform.plank` | Plank size |
 | `arm.xyz`, `arm.rpy` | Pose of the Lite 6 base (`link_base`) relative to `platform_link` |
 
-Examples for `arm`:
+Examples for `platform`:
+
+| Platform | `xyz` | `rpy` |
+|---|---|---|
+| Rear cross tube, turned 180°: vertical plank against the rear face (current) | `[-0.414, 0.0, 0.435]` | `[0.0, 0.0, 3.1416]` |
+| Rear cross tube, vertical plank against the front face | `[-0.374, 0.0, 0.435]` | `[0.0, 0.0, 0.0]` |
+
+Examples for `arm` (relative to the platform):
 
 | Mount | `xyz` | `rpy` |
 |---|---|---|
-| Upright on the middle of the top plank, cable ports to the front (current) | `[-0.07, 0.0, 0.025]` | `[0.0, 0.0, 3.1416]` |
-| Upright on the middle of the top plank, cable ports to the back | `[-0.07, 0.0, 0.025]` | `[0.0, 0.0, 0.0]` |
-| Sideways on the vertical plank, pointing forward, cable ports up | `[0.025, 0.0, -0.095]` | `[0.0, 1.5708, 0.0]` |
+| Upright on the middle of the top plank, cable ports towards the vertical plank (current) | `[-0.07, 0.0, 0.025]` | `[0.0, 0.0, 3.1416]` |
+| Upright on the middle of the top plank, cable ports away from the vertical plank | `[-0.07, 0.0, 0.025]` | `[0.0, 0.0, 0.0]` |
+| Sideways on the vertical plank, pointing away from the top plank, cable ports up | `[0.025, 0.0, -0.095]` | `[0.0, 1.5708, 0.0]` |
 
 For the upright mount, yaw (third `rpy` value) turns the arm around its base axis.
 

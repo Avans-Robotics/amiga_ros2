@@ -51,7 +51,7 @@ def moveit_pose(xyz, rpy):
     """
     # ponytail: MoveIt's world is then turned by the dropped yaw (fine while it has no
     # platform or Amiga); fix: patch xarm's static TF or pass rpy without its launch.
-    if math.isclose(rpy[0], rpy[2], abs_tol=1e-6):
+    if math.isclose(rpy[0], rpy[2], abs_tol=1e-3):  # 3.1416 in the yaml is not exactly pi
         return list(xyz), tuple(rpy)
     print('moveit_real: dropping yaw {:.4f} from the arm pose (xarm rpy order)'.format(rpy[2]))
     new_rpy = (rpy[0], rpy[1], rpy[0])
@@ -108,7 +108,13 @@ if __name__ == '__main__':
     xyz, _ = compose([1, 0, 0], [0, 0, math.pi / 2], [1, 0, 0], [0, 0, 0])
     assert np.allclose(xyz, [1, 1, 0]), xyz
     assert np.allclose(moveit_pose([1, 2, 3], (math.pi, 1.5708, math.pi))[0], [1, 2, 3])
-    # current mount: yaw pi dropped, xyz turned with it, so the world origin stays put
+    # current mount: platform and arm both turned pi, so no yaw to drop
+    xyz, rpy = compose([0, 0, 0.216], [0, 0, 0], [-0.414, 0, 0.435], [0, 0, math.pi])
+    xyz, rpy = compose(xyz, rpy, [-0.07, 0, 0.025], [0, 0, math.pi])
+    assert np.allclose(xyz, [-0.344, 0, 0.676]), xyz
+    assert np.allclose(moveit_pose(xyz, rpy)[0], xyz)
+    assert np.allclose(rpy_to_matrix(*moveit_pose(xyz, rpy)[1]), np.eye(3))
+    # platform not turned: yaw pi dropped, xyz turned with it, so the world origin stays put
     xyz, rpy = compose([0, 0, 0.216], [0, 0, 0], [-0.374, 0, 0.435], [0, 0, 0])
     xyz, rpy = compose(xyz, rpy, [-0.07, 0, 0.025], [0, 0, math.pi])
     assert np.allclose(xyz, [-0.444, 0, 0.676]), xyz
