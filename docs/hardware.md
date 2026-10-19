@@ -41,16 +41,16 @@ All Ethernet devices (Orin, arm controller, camera, router) connect to the PoE s
 
 ## Arm platform in the robot model
 
-`src/amiga_description` models the arm platform: two 575 x 190 x 25 mm planks at 90 degrees on the Amiga back rail, with the Lite 6 upright on the middle of the top plank, cable ports to the front.
-`platform_link` sits on the top front edge of the rail, so the same macro can later be attached to the Amiga's `base_link`.
+The robot model is the Amiga from [amiga_description](https://github.com/Avans-Robotics/amiga_description) (a separate, public repo, pinned in the Dockerfile) with the arm platform from `src/amiga_arm_description` on top: two 575 x 190 x 25 mm planks at 90 degrees on the Amiga's rear cross tube, with the Lite 6 upright on the middle of the top plank, cable ports to the front.
+`platform_link` sits on the top front edge of the cross tube and is attached to the Amiga's `base_link` (centre of the wheel axles, at axle height).
 
 ### Adjusting the mount
 
-The mount is set by the user of the robot: measure it and enter it in [`src/amiga_description/config/arm_platform.yaml`](../src/amiga_description/config/arm_platform.yaml). The values shipped are estimates. RViz, Gazebo and `moveit_real.launch.py` all read it, so there is one place to change. Units are metres and radians; frames are X forward, Y left, Z up.
+The mount is set by the user of the robot: measure it and enter it in [`src/amiga_arm_description/config/arm_platform.yaml`](../src/amiga_arm_description/config/arm_platform.yaml). The values shipped are estimates. RViz, Gazebo and `moveit_real.launch.py` all read it, so there is one place to change. Units are metres and radians; frames are X forward, Y left, Z up.
 
 | Key | Meaning |
 |---|---|
-| `platform.xyz`, `platform.rpy` | Pose of `platform_link` (top front edge of the rail) relative to the floor. Later, on the Amiga model: relative to the Amiga `base_link` |
+| `platform.xyz`, `platform.rpy` | Pose of `platform_link` (top front edge of the rear cross tube) relative to the Amiga `base_link` |
 | `platform.plank` | Plank size |
 | `arm.xyz`, `arm.rpy` | Pose of the Lite 6 base (`link_base`) relative to `platform_link` |
 
@@ -66,7 +66,7 @@ For the upright mount, yaw (third `rpy` value) turns the arm around its base axi
 
 After changing the file:
 
-1. Rebuild (only needed once per new file; with `--symlink-install` edits are picked up directly) and check in RViz with `ros2 launch amiga_description display.launch.py`.
+1. Rebuild (only needed once per new file; with `--symlink-install` edits are picked up directly) and check in RViz with `ros2 launch amiga_arm_description display.launch.py`.
 2. **Also set the mount angle in UFactory Studio** to match (90° sideways, 0° upright). The arm uses it for gravity compensation and collision detection; a wrong value makes it drift or trigger false collision stops.
 
 How MoveIt gets the pose: see [Arm with MoveIt](arm-moveit.md#details-arm-pose-in-moveit).

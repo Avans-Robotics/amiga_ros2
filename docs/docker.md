@@ -2,7 +2,7 @@
 
 All ROS software runs in the Docker container `amiga-ros` on the Orin. It starts automatically when the Orin boots, so after power on it is already running (unless it was removed with `docker compose down`: then run `docker compose up -d` once).
 
-The image `amiga-ros:jazzy` (built from [`docker/`](../docker/)) contains ROS 2 Jazzy, MoveIt 2, xarm_ros2 (jazzy branch, built from source), depthai-ros, joy, teleop_twist_joy and the micro-ROS agent (built from source).
+The image `amiga-ros:jazzy` (built from [`docker/`](../docker/)) contains ROS 2 Jazzy, MoveIt 2, xarm_ros2 (jazzy branch, built from source), depthai-ros, joy, teleop_twist_joy, the micro-ROS agent (built from source) and the Amiga model [amiga_description](https://github.com/Avans-Robotics/amiga_description) (pinned tag; to update, change the tag in the Dockerfile and rebuild the image).
 
 ## Entering the container
 
@@ -28,7 +28,7 @@ The repo lives in `~/amiga_ros2` on the Orin; `src/` is mounted into the contain
 ```bash
 cd ~/amiga_ros2
 git pull
-docker exec -w /ros2_ws amiga-ros /ros_entrypoint.sh colcon build --symlink-install --packages-select amiga_description amiga_bringup
+docker exec -w /ros2_ws amiga-ros /ros_entrypoint.sh colcon build --symlink-install --packages-select amiga_arm_description amiga_bringup
 ```
 
 If `docker/` changed (Dockerfile or compose file), rebuild the image and recreate the container:

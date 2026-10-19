@@ -1,4 +1,4 @@
-"""Spawn the arm platform in Gazebo (gz sim) with the Lite 6 trajectory controller."""
+"""Spawn the Amiga with the arm platform in Gazebo (gz sim) with the Lite 6 trajectory controller."""
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
 from launch.conditions import IfCondition
@@ -10,16 +10,16 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    pkg = FindPackageShare('amiga_description')
+    pkg = FindPackageShare('amiga_arm_description')
     robot_description = ParameterValue(
-        Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'arm_platform_standalone.urdf.xacro']),
+        Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'amiga_arm.urdf.xacro']),
                  ' config:=', LaunchConfiguration('config'),
                  ' ros2_control_plugin:=gz_ros2_control/GazeboSimSystem']),
         value_type=str)
     sim_time = {'use_sim_time': True}
 
     spawn = Node(package='ros_gz_sim', executable='create',
-                 arguments=['-topic', 'robot_description', '-name', 'arm_platform'])
+                 arguments=['-topic', 'robot_description', '-name', 'amiga_arm'])
     controllers = [
         Node(package='controller_manager', executable='spawner', arguments=[name], parameters=[sim_time])
         for name in ('joint_state_broadcaster', 'lite6_traj_controller')

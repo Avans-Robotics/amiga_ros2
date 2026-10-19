@@ -8,12 +8,12 @@ docker compose -f compose.yaml -f compose.sim.yaml up -d --build
 xhost +local:
 docker exec -it amiga-ros bash
 # inside the container
-cd /ros2_ws && colcon build --packages-select amiga_description --symlink-install && source install/setup.bash
-ros2 launch amiga_description display.launch.py    # RViz with joint sliders
-ros2 launch amiga_description gazebo.launch.py     # Gazebo with the Lite 6 trajectory controller
+cd /ros2_ws && colcon build --packages-select amiga_arm_description --symlink-install && source install/setup.bash
+ros2 launch amiga_arm_description display.launch.py    # RViz with joint sliders
+ros2 launch amiga_arm_description gazebo.launch.py     # Gazebo with the Lite 6 trajectory controller
 ```
 
-`src/` is mounted into the container, so edits on the host are picked up after a `colcon build` (no image rebuild).
+`src/` is mounted into the container, so edits on the host are picked up after a `colcon build` (no image rebuild). The Amiga model (amiga_description) comes with the image, at the tag pinned in the Dockerfile.
 
 ## Launch files
 
