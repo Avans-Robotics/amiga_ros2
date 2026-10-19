@@ -29,10 +29,10 @@ Safety first: someone at the Amiga e-stop (red button above the pendant) wheneve
 | [Docker](docs/docker.md) | The container: entering it, updating, rebuilding |
 | [Installation](docs/install.md) | Setting up the Orin from scratch |
 | [Troubleshooting](docs/troubleshooting.md) | Common problems and fixes |
+| [Simulation](docs/simulation.md) | Drive the Amiga and move the arm in Gazebo on a laptop |
 
 For developers:
 
 | Topic | What is in it |
 |---|---|
-| [Simulation](docs/simulation.md) | RViz and Gazebo on a laptop |
 | [Status and open items](docs/status.md) | What is verified, what is still to do |

@@ -4,7 +4,7 @@
 
 On the robot: ROS 2 connects to the arm, the camera publishes, camera images show in RViz over RDP, MoveIt plans and executes on the real Lite 6, the Amiga drives with the F710.
 
-On a laptop: the Amiga with the arm platform in Gazebo (headless: spawn and both controllers active). RViz view of the Amiga with the arm not checked yet.
+On a laptop: the Amiga with the arm platform in RViz; in Gazebo (headless) driving on `/cmd_vel` (straight 0.5 m/s matches the Gazebo pose; turning drifts as described in [Simulation](simulation.md#good-to-know)) and an arm trajectory goal.
 
 Not verified yet:
 
@@ -24,7 +24,7 @@ ROS 2:
 - Measure the platform pose on the Amiga (`platform.xyz`, currently an estimate from the model dimensions) and check the Amiga with the arm in RViz.
 - MoveIt: fix the xarm static TF rpy order properly instead of dropping the arm yaw.
 - MoveIt: planks and the Amiga as collision objects (currently the arm only).
-- Amiga model (amiga_description): `ros2_control` and Gazebo drive tags, when AgriSim (M5) needs them.
+- Simulation: tune wheel friction against the real robot; add the OAK-D and an IMU when someone needs them.
 - Pin the xarm_ros2 commit in the Dockerfile (both images are on 3dc2b5e).
 
 Small:

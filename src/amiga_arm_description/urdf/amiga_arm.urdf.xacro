@@ -2,21 +2,30 @@
 <robot name="amiga_arm" xmlns:xacro="http://ros.org/wiki/xacro">
 
   <!-- The Amiga with the arm platform on its base_link (platform xyz/rpy from the config).
-       The Amiga stands fixed on "world" (the floor): MoveIt and Gazebo use world as the root. -->
+       fixed:=true   the Amiga stands fixed on "world" (the floor), the root for RViz and MoveIt
+       gazebo:=true  adds the Gazebo drive (use with fixed:=false, so the Amiga can drive) -->
   <xacro:arg name="config" default="$(find amiga_arm_description)/config/arm_platform.yaml"/>
   <xacro:arg name="ros2_control_plugin" default="uf_robot_hardware/UFRobotSystemHardware"/>
   <xacro:arg name="robot_ip" default="10.95.76.155"/>
+  <xacro:arg name="fixed" default="true"/>
+  <xacro:arg name="gazebo" default="false"/>
 
   <xacro:include filename="$(find amiga_description)/urdf/amiga.xacro"/>
   <xacro:include filename="$(find amiga_arm_description)/urdf/arm_platform.xacro"/>
 
-  <link name="world"/>
-  <joint name="world_to_amiga_joint" type="fixed">
-    <parent link="world"/>
-    <child link="base_footprint"/>
-  </joint>
+  <xacro:if value="$(arg fixed)">
+    <link name="world"/>
+    <joint name="world_to_amiga_joint" type="fixed">
+      <parent link="world"/>
+      <child link="base_footprint"/>
+    </joint>
+  </xacro:if>
 
   <xacro:amiga prefix=""/>
+  <xacro:if value="$(arg gazebo)">
+    <xacro:include filename="$(find amiga_description)/urdf/amiga.gazebo.xacro"/>
+    <xacro:amiga_gazebo prefix=""/>
+  </xacro:if>
 
   <xacro:property name="platform" value="${xacro.load_yaml('$(arg config)')['platform']}"/>
   <xacro:arm_platform parent="base_link"
