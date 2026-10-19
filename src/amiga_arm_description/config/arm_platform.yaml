@@ -1,0 +1,29 @@
+# Arm platform geometry. All values in metres / radians.
+# Frames: X forward, Y left, Z up. platform_link: X points from the top plank towards
+# the vertical plank. Its origin is the top edge of the cross tube the vertical plank
+# hangs against, centred in Y.
+
+platform:
+  # Pose of platform_link relative to the Amiga base_link (centre of the wheel axles,
+  # at axle height; see the amiga_description package).
+  # Current mount: on the rear cross tube, turned 180 deg (vertical plank against the
+  # tube's rear face, top plank towards the front of the Amiga).
+  # Estimate from the amiga_description dimensions: rear cross tube centred at x -0.394,
+  # 0.040 thick, top at z 0.435. Measure on the robot and update.
+  xyz: [-0.414, 0.0, 0.435]
+  rpy: [0.0, 0.0, 3.1416]
+  # Not turned (vertical plank against the tube's front face):
+  # xyz: [-0.374, 0.0, 0.435]
+  # rpy: [0.0, 0.0, 0.0]
+  plank: {length: 0.575, width: 0.190, thickness: 0.025}
+
+arm:
+  # Lite 6 link_base relative to platform_link.
+  # Current mount: upright on the middle of the top plank, cable ports towards the
+  # vertical plank (mount angle 0 in UFactory Studio). Yaw 0.0 = cable ports away from it.
+  xyz: [-0.07, 0.0, 0.025]
+  rpy: [0.0, 0.0, 3.1416]
+  # Sideways on the vertical plank's front face, base axis along +X, cable ports up
+  # (mount angle 90 in UFactory Studio):
+  # xyz: [0.025, 0.0, -0.095]
+  # rpy: [0.0, 1.5708, 0.0]

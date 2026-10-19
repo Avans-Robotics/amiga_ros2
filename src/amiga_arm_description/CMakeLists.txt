@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(amiga_description)
+project(amiga_arm_description)
 
 find_package(ament_cmake REQUIRED)
 

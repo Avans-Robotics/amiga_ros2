@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot name="amiga_arm" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- The Amiga with the arm platform on its base_link (platform xyz/rpy from the config).
+       The Amiga stands fixed on "world" (the floor): MoveIt and Gazebo use world as the root. -->
+  <xacro:arg name="config" default="$(find amiga_arm_description)/config/arm_platform.yaml"/>
+  <xacro:arg name="ros2_control_plugin" default="uf_robot_hardware/UFRobotSystemHardware"/>
+  <xacro:arg name="robot_ip" default="10.95.76.155"/>
+
+  <xacro:include filename="$(find amiga_description)/urdf/amiga.xacro"/>
+  <xacro:include filename="$(find amiga_arm_description)/urdf/arm_platform.xacro"/>
+
+  <link name="world"/>
+  <joint name="world_to_amiga_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_footprint"/>
+  </joint>
+
+  <xacro:amiga prefix=""/>
+
+  <xacro:property name="platform" value="${xacro.load_yaml('$(arg config)')['platform']}"/>
+  <xacro:arm_platform parent="base_link"
+    xyz="${' '.join(map(str, platform['xyz']))}" rpy="${' '.join(map(str, platform['rpy']))}"
+    config="$(arg config)"
+    ros2_control_plugin="$(arg ros2_control_plugin)"
+    robot_ip="$(arg robot_ip)"/>
+
+</robot>

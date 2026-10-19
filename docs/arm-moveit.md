@@ -18,7 +18,7 @@ Safety first: someone at the arm with the arm e-stop (red button on the wooden a
 3. Start the driver and MoveIt:
 
    ```bash
-   ros2 launch amiga_description moveit_real.launch.py
+   ros2 launch amiga_arm_description moveit_real.launch.py
    ```
 
    This enables the arm: the motors switch on and the arm is put in servo mode. RViz opens. Check that the arm in RViz matches the real arm.
@@ -51,8 +51,8 @@ ros2 service list | grep ufactory    # clean_error, motion_enable, set_mode, set
 
 ## Details: arm pose in MoveIt
 
-xarm's MoveIt model has no platform, so `moveit_real.launch.py` combines `platform` and `arm` from [`arm_platform.yaml`](../src/amiga_description/config/arm_platform.yaml) into one pose of the arm base relative to the world (currently `-0.07 0 0.528`). Check the maths with `python3 src/amiga_description/launch/moveit_real.launch.py`. To change the mount, see [Hardware](hardware.md#adjusting-the-mount).
+xarm's MoveIt model has no Amiga or platform, so `moveit_real.launch.py` combines the Amiga `base_link` height (from amiga_description) with `platform` and `arm` from [`arm_platform.yaml`](../src/amiga_arm_description/config/arm_platform.yaml) into one pose of the arm base relative to the world, the floor under the centre of the Amiga (`-0.344 0 0.676`, yaw 0, for the current mount). Check the maths with `python3 src/amiga_arm_description/launch/moveit_real.launch.py`. To change the mount, see [Hardware](hardware.md#adjusting-the-mount).
 
-Known xarm issue: its MoveIt launch passes the rpy to `static_transform_publisher` as roll-pitch-yaw, while that tool expects yaw-pitch-roll. Both only agree when roll equals yaw; otherwise the arm shows upside down in MoveIt. `moveit_real.launch.py` then drops the yaw (it logs `dropping yaw ...`): the arm stands right, but MoveIt's world is turned by that yaw relative to the Amiga. Harmless while MoveIt knows nothing about the platform; `display.launch.py` always shows the full pose.
+Known xarm issue: its MoveIt launch passes the rpy to `static_transform_publisher` as roll-pitch-yaw, while that tool expects yaw-pitch-roll. Both only agree when roll equals yaw; otherwise the arm shows upside down in MoveIt. `moveit_real.launch.py` then drops the yaw (it logs `dropping yaw ...`) and turns the position with it: the arm stands right and MoveIt's world keeps its origin under the centre of the Amiga, but is turned by that yaw. The current mount does not hit this: platform and arm are both turned 180°, so the arm has yaw 0 relative to the Amiga. The launch prints the pose it passes on. Harmless while MoveIt knows nothing about the platform; `display.launch.py` always shows the full pose.
 
-All launch files of `amiga_description`: see [Simulation](simulation.md#launch-files).
+All launch files of `amiga_arm_description`: see [Simulation](simulation.md#launch-files).

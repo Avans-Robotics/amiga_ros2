@@ -56,6 +56,12 @@ RUN source /opt/ros/jazzy/setup.bash \
     && colcon build --symlink-install --parallel-workers 2 \
          --cmake-args -DCMAKE_BUILD_TYPE=Release
 
+# --- Amiga robot model (pinned tag) ---
+# Own layer after the big build, so bumping the tag does not rebuild xarm.
+RUN git clone -b v0.4.0 --depth 1 https://github.com/Avans-Robotics/amiga_description.git src/amiga_description \
+ && source /opt/ros/jazzy/setup.bash \
+ && colcon build --symlink-install --packages-select amiga_description
+
 # --- Source the workspace automatically ---
 RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc \
  && echo "source /ros2_ws/install/setup.bash" >> /root/.bashrc

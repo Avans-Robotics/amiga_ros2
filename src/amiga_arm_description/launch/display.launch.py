@@ -1,4 +1,4 @@
-"""Show the arm platform in RViz.
+"""Show the Amiga with the arm platform in RViz.
 
 use_real_arm:=false  joint sliders (joint_state_publisher_gui)
 use_real_arm:=true   mirror the real arm from /ufactory/joint_states (start the xArm driver separately)
@@ -13,10 +13,10 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    pkg = FindPackageShare('amiga_description')
+    pkg = FindPackageShare('amiga_arm_description')
     use_real_arm = LaunchConfiguration('use_real_arm')
     robot_description = ParameterValue(
-        Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'arm_platform_standalone.urdf.xacro']),
+        Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'amiga_arm.urdf.xacro']),
                  ' config:=', LaunchConfiguration('config')]),
         value_type=str)
 

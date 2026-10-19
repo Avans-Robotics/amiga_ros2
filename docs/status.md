@@ -4,7 +4,7 @@
 
 On the robot: ROS 2 connects to the arm, the camera publishes, camera images show in RViz over RDP, MoveIt plans and executes on the real Lite 6, the Amiga drives with the F710.
 
-On a laptop: the arm platform in RViz and Gazebo.
+On a laptop: the Amiga with the arm platform in Gazebo (headless: spawn and both controllers active). RViz view of the Amiga with the arm not checked yet.
 
 Not verified yet:
 
@@ -20,10 +20,11 @@ Network and access:
 
 ROS 2:
 
-- URDF: Amiga + Lite 6 + OAK-D, RealSense and GPS optional and off by default, IMU always on. Arm and camera pose (xyz, rpy) configurable from one YAML per robot.
+- URDF: OAK-D on the Amiga model (depthai_camera macro), pose configurable from the YAML.
+- Measure the platform pose on the Amiga (`platform.xyz`, currently an estimate from the model dimensions) and check the Amiga with the arm in RViz.
 - MoveIt: fix the xarm static TF rpy order properly instead of dropping the arm yaw.
 - MoveIt: planks and the Amiga as collision objects (currently the arm only).
-- Amiga URDF: correct the chassis model from measurements of our Amiga (wheel joints sit below the floor, no rail profile), then mount the platform on it.
+- Amiga model (amiga_description): `ros2_control` and Gazebo drive tags, when AgriSim (M5) needs them.
 - Pin the xarm_ros2 commit in the Dockerfile (both images are on 3dc2b5e).
 
 Small:
