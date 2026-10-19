@@ -13,7 +13,7 @@ Safety first: someone at the Amiga e-stop (red button above the pendant) wheneve
 1. **Charge**: connect the quick charger to the orange connector and plug it into mains. See [Power and charging](docs/power.md).
 2. **Power on**: press the e-stop, turn both battery keys to ON, tap START on the pendant, release the e-stop. The Orin, arm controller, switch and router start by themselves.
 3. **Connect**: join the WiFi `Agrorobotics Fieldlab` and log in to the Orin: `ssh hcr@10.95.76.50`, or RDP to `10.95.76.50`. See [Network and remote access](docs/network.md).
-4. **Drive**: set the pendant to AUTO ACTIVE, then start gamepad teleop in the container. See [Driving](docs/driving.md).
+4. **Drive**: with the pendant in AUTO INACTIVE, take it off its holder and drive with the thumbstick; releasing it stops the robot. For a gamepad or your own ROS software, see [Driving](docs/driving.md).
 5. **Power off**: `sudo shutdown now` on the Orin, wait until it is off, then turn both keys to OFF.
 
 ## Documentation
