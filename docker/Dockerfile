@@ -59,7 +59,7 @@ RUN source /opt/ros/jazzy/setup.bash \
 
 # --- Amiga robot model (pinned tag) ---
 # Own layer after the big build, so bumping the tag does not rebuild xarm.
-RUN git clone -b v0.5.0 --depth 1 https://github.com/Avans-Robotics/amiga_description.git src/amiga_description \
+RUN git clone -b v0.5.1 --depth 1 https://github.com/Avans-Robotics/amiga_description.git src/amiga_description \
  && source /opt/ros/jazzy/setup.bash \
  && colcon build --symlink-install --packages-select amiga_description
 
