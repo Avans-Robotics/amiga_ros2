@@ -25,7 +25,6 @@ ROS 2:
 - MoveIt: fix the xarm static TF rpy order properly instead of dropping the arm yaw.
 - MoveIt: planks and the Amiga as collision objects (currently the arm only).
 - Simulation: tune wheel friction against the real robot; add the OAK-D and an IMU when someone needs them.
-- Pin the xarm_ros2 commit in the Dockerfile (both images are on 3dc2b5e).
 
 Small:
 

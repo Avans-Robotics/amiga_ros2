@@ -26,9 +26,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /ros2_ws
 
-# --- xArm / Lite 6 driver + MoveIt config (source, jazzy branch) ---
-RUN git clone -b jazzy --recursive --depth 1 \
-      https://github.com/xArm-Developer/xarm_ros2.git src/xarm_ros2
+# --- xArm / Lite 6 driver + MoveIt config (source, jazzy branch, pinned commit) ---
+RUN git clone -b jazzy --recursive https://github.com/xArm-Developer/xarm_ros2.git src/xarm_ros2 \
+ && git -C src/xarm_ros2 checkout d837f2e17f7f36043103b367fca3af8172626245 \
+ && git -C src/xarm_ros2 submodule update --init --recursive
 
 # --- micro-ROS agent for the Amiga Portenta (no apt package for Jazzy) ---
 RUN git clone -b jazzy https://github.com/micro-ROS/micro-ROS-Agent.git src/micro-ROS-Agent \
