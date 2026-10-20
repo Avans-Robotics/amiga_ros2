@@ -32,6 +32,8 @@ ros2 launch amiga_arm_description gazebo.launch.py rviz:=true
 
 Gazebo opens with the Amiga and the arm on an empty ground plane; RViz shows the robot and its frames. Open a second terminal in the container for the next steps (`docker exec -it amiga-ros bash`).
 
+![Gazebo (left) and RViz (right) with the simulated Amiga and arm](images/simulation-gazebo-rviz.png)
+
 The simulation runs in ROS domain 1, so it does not mix with a real robot on the same network (domain 0).
 
 ## Driving
