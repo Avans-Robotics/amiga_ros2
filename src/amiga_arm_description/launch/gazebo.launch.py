@@ -4,6 +4,9 @@ with the Lite 6 trajectory controller.
 publish_odom_tf:=false  do not publish odom -> base_footprint (when an EKF publishes it instead)
 rviz:=true              also start RViz (fixed frame odom)
 gz_args:='-s -r empty.sdf'  Gazebo without its window (server only)
+x:=, y:=, yaw:=         spawn pose in the world (pixelfield: in a Path Gap or the Border, not on Plants)
+sideways:=true          arm mounted sideways (arm_sideways in the config), reaches the soil
+gripper:=true           adds the Gripper Lite and its gripper_controller
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
@@ -21,22 +24,32 @@ def generate_launch_description():
         Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'amiga_arm.urdf.xacro']),
                  ' config:=', LaunchConfiguration('config'),
                  ' fixed:=false gazebo:=true',
+                 ' sideways:=', LaunchConfiguration('sideways'),
+                 ' gripper:=', LaunchConfiguration('gripper'),
                  ' ros2_control_plugin:=gz_ros2_control/GazeboSimSystem']),
         value_type=str)
     sim_time = {'use_sim_time': True}
 
     spawn = Node(package='ros_gz_sim', executable='create',
-                 arguments=['-topic', 'robot_description', '-name', 'amiga_arm', '-z', '0.05'])
+                 arguments=['-topic', 'robot_description', '-name', 'amiga_arm', '-z', '0.05',
+                            '-x', LaunchConfiguration('x'), '-y', LaunchConfiguration('y'),
+                            '-Y', LaunchConfiguration('yaw')])
     controllers = [
         Node(package='controller_manager', executable='spawner', arguments=[name], parameters=[sim_time])
         for name in ('joint_state_broadcaster', 'lite6_traj_controller')
-    ]
+    ] + [Node(package='controller_manager', executable='spawner', arguments=['gripper_controller'],
+              parameters=[sim_time], condition=IfCondition(LaunchConfiguration('gripper')))]
 
     return LaunchDescription([
         DeclareLaunchArgument('config', default_value=PathJoinSubstitution([pkg, 'config', 'arm_platform.yaml'])),
         DeclareLaunchArgument('publish_odom_tf', default_value='true'),
         DeclareLaunchArgument('rviz', default_value='false'),
         DeclareLaunchArgument('gz_args', default_value='-r empty.sdf'),
+        DeclareLaunchArgument('x', default_value='0.0'),
+        DeclareLaunchArgument('y', default_value='0.0'),
+        DeclareLaunchArgument('yaw', default_value='0.0'),
+        DeclareLaunchArgument('sideways', default_value='false'),
+        DeclareLaunchArgument('gripper', default_value='false'),
         IncludeLaunchDescription(
             PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
             launch_arguments={'gz_args': LaunchConfiguration('gz_args')}.items()),

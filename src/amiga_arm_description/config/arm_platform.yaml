@@ -23,7 +23,10 @@ arm:
   # vertical plank (mount angle 0 in UFactory Studio). Yaw 0.0 = cable ports away from it.
   xyz: [-0.07, 0.0, 0.025]
   rpy: [0.0, 0.0, 3.1416]
-  # Sideways on the vertical plank's front face, base axis along +X, cable ports up
-  # (mount angle 90 in UFactory Studio):
-  # xyz: [0.025, 0.0, -0.095]
-  # rpy: [0.0, 1.5708, 0.0]
+
+# Sideways on the vertical plank's front face, base axis along +X, cable ports up
+# (mount angle 90 in UFactory Studio). Reaches the soil behind the rear axle; the simulation
+# uses it with sideways:=true. To mount the real arm this way, copy it into `arm`.
+arm_sideways:
+  xyz: [0.025, 0.0, -0.095]
+  rpy: [0.0, 1.5708, 0.0]
