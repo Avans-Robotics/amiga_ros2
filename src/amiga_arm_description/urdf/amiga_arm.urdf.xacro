@@ -3,12 +3,16 @@
 
   <!-- The Amiga with the arm platform on its base_link (platform xyz/rpy from the config).
        fixed:=true   the Amiga stands fixed on "world" (the floor), the root for RViz and MoveIt
-       gazebo:=true  adds the Gazebo drive (use with fixed:=false, so the Amiga can drive) -->
+       gazebo:=true  adds the Gazebo drive (use with fixed:=false, so the Amiga can drive)
+       sideways:=true  arm pose from `arm_sideways` in the config instead of `arm`
+       gripper:=true  adds the Gripper Lite (simulation: its controller is in sim_controllers.yaml) -->
   <xacro:arg name="config" default="$(find amiga_arm_description)/config/arm_platform.yaml"/>
   <xacro:arg name="ros2_control_plugin" default="uf_robot_hardware/UFRobotSystemHardware"/>
   <xacro:arg name="robot_ip" default="10.95.76.155"/>
   <xacro:arg name="fixed" default="true"/>
   <xacro:arg name="gazebo" default="false"/>
+  <xacro:arg name="sideways" default="false"/>
+  <xacro:arg name="gripper" default="false"/>
 
   <xacro:include filename="$(find amiga_description)/urdf/amiga.xacro"/>
   <xacro:include filename="$(find amiga_arm_description)/urdf/arm_platform.xacro"/>
@@ -30,7 +34,8 @@
   <xacro:property name="platform" value="${xacro.load_yaml('$(arg config)')['platform']}"/>
   <xacro:arm_platform parent="base_link"
     xyz="${' '.join(map(str, platform['xyz']))}" rpy="${' '.join(map(str, platform['rpy']))}"
-    config="$(arg config)"
+    config="$(arg config)" arm_key="${'arm_sideways' if '$(arg sideways)'.lower() in ('true', '1') else 'arm'}"
+    gripper="$(arg gripper)"
     ros2_control_plugin="$(arg ros2_control_plugin)"
     robot_ip="$(arg robot_ip)"/>
 

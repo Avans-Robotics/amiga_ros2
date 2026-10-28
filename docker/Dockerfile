@@ -64,6 +64,19 @@ RUN git clone -b v0.5.1 --depth 1 https://github.com/Avans-Robotics/amiga_descri
  && source /opt/ros/jazzy/setup.bash \
  && colcon build --symlink-install --packages-select amiga_description
 
+# --- pixelfield: Gazebo crop Fields with pullable Plants (world provider, pinned commit) ---
+# Python package (editable: it finds its Asset Library in the clone) and its gz-sim systems.
+RUN apt-get update && apt-get install -y --no-install-recommends python3-pip \
+ && rm -rf /var/lib/apt/lists/* \
+ && git init -q /opt/pixelfield \
+ && git -C /opt/pixelfield fetch -q --depth 1 https://github.com/Avans-Robotics/AgriSim.git daed17a2782c95bfb7b4d2288568da20c392fff4 \
+ && git -C /opt/pixelfield checkout -q FETCH_HEAD \
+ && pip3 install --break-system-packages -e /opt/pixelfield \
+ && source /opt/ros/jazzy/setup.bash \
+ && cmake -S /opt/pixelfield/src/pixelfield/exporters/gazebo/systems -B /opt/pixelfield/build/systems \
+ && cmake --build /opt/pixelfield/build/systems
+ENV GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/pixelfield/build/systems
+
 # --- Source the workspace automatically ---
 RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc \
  && echo "source /ros2_ws/install/setup.bash" >> /root/.bashrc
