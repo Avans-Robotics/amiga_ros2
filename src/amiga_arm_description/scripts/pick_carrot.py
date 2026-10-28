@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Pick one carrot of a pixelfield Field with the simulated Lite 6 (sideways mount, Gripper Lite).
+"""Pick one carrot of a pixelfield Field with the simulated arm (sideways mount, with gripper).
 
 Oracle, no perception and no MoveIt: the carrot comes from the Field's manifest.json, the robot
 pose from Gazebo, the joint angles from a small IK on the robot_description.
 
-  pick_carrot.py spawn <manifest.json>   print the carrot and the launch args to spawn next to it
+  pick_carrot.py spawn <manifest.json>   print the carrot and the launch args to spawn over it
   pick_carrot.py pick <manifest.json>    reach it, close the gripper on its leaf bunch, lift
+  --robot xarm6                          spawn and check: for an xArm 6 (default lite6); pick reads
+                                         the robot from the running simulation
+
+The Field needs Path Gaps for the Amiga's wheels (examples/amiga_10x10.yaml): the Amiga straddles
+the bed between the first two gaps, heading north, and the arm picks under it.
 
 `pick` prints what the Plant did (/world/pixelfield/pixelfield/pull_out) and exits 0 once the
 Plant was picked (pulled out or not), 1 if it never was. See docs/simulation.md.
@@ -24,42 +29,57 @@ from pathlib import Path
 import numpy as np
 
 GRIP_HEIGHT = 0.04   # m, finger pad centre above the crown: the leaf bunch fits the open fingers
-PAD_ABOVE_TCP = 0.0126  # m, finger pad centre above link_tcp (fingertip end) with the tool down
-MIN_BUNCH = 0.025    # m, thinner bunches slip through the closed Gripper Lite (22.4 mm pad gap)
-REACH_X = -0.65      # m, carrot in base_footprint x: middle of the top-down reach of the sideways arm
 APPROACH = 0.20      # m, pre-grasp above the grip point, over the leaves
 LIFT_MARGIN = 0.05   # m, lifted past the root length: pixelfield detaches the root after that
-OPEN, CLOSED = 0.0089, 0.0  # finger_joint1, see sim_controllers.yaml
+OPEN_FORCE = 5.0     # N per finger, see sim_controllers.yaml
+# Per robot: reach, the carrot's (x, y) in base_footprint, inside the top-down reach of the
+# forward-pointing sideways arm, on a vertical path without IK jumps (xarm6: off the centre line,
+# where that path crosses its wrist singularity); the finger pad centre above link_tcp (fingertip
+# end) with the tool down; the thinnest leaf bunch the closed gripper still squeezes; the squeeze
+# per finger, its joint effort limit.
+ROBOTS = {
+    'lite6': {'reach': (-0.20, 0.0), 'pad_above_tcp': 0.0126, 'min_bunch': 0.025, 'force': 5.0},  # 22.4 mm closed
+    'xarm6': {'reach': (0.10, 0.15), 'pad_above_tcp': 0.02, 'min_bunch': 0.0, 'force': 30.0},  # jaws close fully
+}
 JOINTS = [f'joint{i}' for i in range(1, 7)]
 
 
-def choose(manifest_path):
-    """The carrot nearest the Field's east edge whose leaf bunch the gripper can squeeze."""
+def bed_x(manifest):
+    """x of the Amiga's centre straddling the bed between the Field's first two Path Gaps."""
+    gaps = manifest['field']['path_gaps']
+    if len(gaps) < 2:
+        raise SystemExit('the Field has no Path Gaps for the wheels: use one like amiga_10x10.yaml')
+    return sum(sum(gap) / 2 for gap in gaps[:2]) / 2
+
+
+def choose(manifest_path, robot):
+    """The carrot in the bed, away from the Field's ends, that lies where the arm reaches across
+    the bed and whose leaf bunch the gripper can squeeze. Heading north, base_footprint y points
+    west, so the reach's y sets the carrot's x."""
     from pixelfield import ROOT
     from pixelfield.exporters.gazebo import gripper
     manifest = json.loads(Path(manifest_path).read_text())
+    target_x, depth = bed_x(manifest) - robot['reach'][1], manifest['field']['depth']
     gripper.GRIP_HEIGHT, gripper.JAW_MARGIN = GRIP_HEIGHT, 0.0
     best = None
-    for p in manifest['plants']:
-        if p['crop'] != 'carrot':
+    for p in sorted(manifest['plants'], key=lambda p: abs(p['pose']['x'] - target_x)):
+        if p['crop'] != 'carrot' or not 1.0 < p['pose']['y'] < depth - 1.0:
             continue
         lib = manifest['crops']['carrot']['library']
         physics = json.loads((ROOT / lib / p['variant']).with_suffix('.physics.json').read_text())
-        if gripper.jaw_width(physics, p['scale']) < MIN_BUNCH:
-            continue
-        root = next(link for link in physics['links'] if link['name'] == 'root')
-        z = [v[2] for v in root['hull']['vertices']]
-        crown, root_length = max(z) * p['scale'], (max(z) - min(z)) * p['scale']
-        if best is None or p['pose']['x'] > best[0]['pose']['x']:
-            best = (p, crown, root_length)
+        if gripper.jaw_width(physics, p['scale']) >= robot['min_bunch']:
+            root = next(link for link in physics['links'] if link['name'] == 'root')
+            z = [v[2] for v in root['hull']['vertices']]
+            best = (p, max(z) * p['scale'], (max(z) - min(z)) * p['scale'])  # crown, root length
+            break
     if best is None:
-        raise SystemExit(f'no carrot in {manifest_path} with a leaf bunch of {MIN_BUNCH * 1000:.0f} mm')
-    return best
+        raise SystemExit(f'no carrot in {manifest_path} to pick')
+    return best + (manifest,)
 
 
-def spawn_pose(plant):
-    """Heading east with the carrot REACH_X behind base_footprint: wheels and chassis off the Field."""
-    return plant['pose']['x'] - REACH_X, plant['pose']['y'], 0.0
+def spawn_pose(manifest, plant, reach):
+    """Straddling the bed, heading north, the carrot at reach from base_footprint."""
+    return bed_x(manifest), plant['pose']['y'] - reach[0], np.pi / 2
 
 
 # --- kinematics -------------------------------------------------------------------------------
@@ -87,6 +107,7 @@ class Chain:
         m, i = np.eye(4), 0
         for j in self.chain:
             o = j.find('origin')
+            o = {} if o is None else o  # URDF default: identity
             t = np.eye(4)
             t[:3, :3] = rpy_matrix(*[float(v) for v in o.get('rpy', '0 0 0').split()])
             t[:3, 3] = [float(v) for v in o.get('xyz', '0 0 0').split()]
@@ -182,10 +203,6 @@ def pick(args):
     from std_msgs.msg import Float64MultiArray, String
     from trajectory_msgs.msg import JointTrajectoryPoint
 
-    plant, crown, root_length = choose(args.manifest)
-    pid = plant['id']
-    events, peak = pull_out_events(pid)
-
     rclpy.init()
     node = rclpy.create_node('pick_carrot', parameter_overrides=[
         rclpy.parameter.Parameter('use_sim_time', value=True)])
@@ -195,17 +212,34 @@ def pick(args):
     node.create_subscription(JointState, '/joint_states',
                              lambda m: joints.update(zip(m.name, m.position)), 10)
     grip = node.create_publisher(Float64MultiArray, '/gripper_controller/commands', 10)
-    arm = ActionClient(node, FollowJointTrajectory, '/lite6_traj_controller/follow_joint_trajectory')
+    end = time.time() + 120  # a pixelfield world loads slowly, its controllers start late
     while not (urdf and all(j in joints for j in JOINTS)):
+        if time.time() > end:
+            raise SystemExit('no /robot_description or arm /joint_states: is the simulation up, '
+                             'with joint_state_broadcaster active?')
         rclpy.spin_once(node, timeout_sec=0.1)
-    arm.wait_for_server()
+    # The robot from the running simulation, so it cannot differ from the launch's robot:=
+    robot = next((r for r, link in (('xarm6', 'xarm_gripper_base_link'), ('lite6', 'uflite_gripper_link'))
+                  if f'"{link}"' in urdf[0]), None)
+    if robot is None:
+        raise SystemExit('no gripper in the robot_description: launch with gripper:=true')
+    arm = ActionClient(node, FollowJointTrajectory, f'/{robot}_traj_controller/follow_joint_trajectory')
+    if not arm.wait_for_server(timeout_sec=30):
+        raise SystemExit(f'no /{robot}_traj_controller action server')
     chain = Chain(urdf[0])
 
-    def gripper(position, seconds):
-        end = time.time() + seconds  # wall time: keep publishing until the fingers had time to move
-        while time.time() < end:
-            grip.publish(Float64MultiArray(data=[position]))
-            rclpy.spin_once(node, timeout_sec=0.1)
+    grip_cfg = ROBOTS[robot]
+    plant, crown, root_length, _ = choose(args.manifest, grip_cfg)
+    pid = plant['id']
+    events, peak = pull_out_events(pid)
+
+    def gripper(force, seconds):
+        """Keep commanding the finger force for `seconds` of sim time: squeezing picked Plants
+        can slow the simulation down to a few percent of real time."""
+        start = node.get_clock().now()
+        while (node.get_clock().now() - start).nanoseconds < seconds * 1e9:
+            grip.publish(Float64MultiArray(data=[force, force]))
+            rclpy.spin_once(node, timeout_sec=0.05)
 
     def move(path, seconds):
         goal = FollowJointTrajectory.Goal()
@@ -223,10 +257,18 @@ def pick(args):
             print(f'  trajectory: {result.result().result.error_string}; joints '
                   f'{np.round([joints[j] for j in JOINTS], 2)}, goal {np.round(path[-1], 2)}', flush=True)
 
+    def where(label):
+        """Print the actual TCP and finger gap: the arm can lag its plan (leaves, effort limits)."""
+        rclpy.spin_once(node, timeout_sec=0.1)
+        m = chain.fk([joints[j] for j in JOINTS])
+        fingers = [joints.get(f'finger_joint{i}', float('nan')) for i in (1, 2)]
+        print(f'  {label}: tcp {np.round(m[:3, 3], 3)}, tool z {np.round(m[:3, 2], 2)}, '
+              f'fingers {np.round(fingers, 4)}', flush=True)
+
     x, y, yaw = robot_pose()
     c, s = np.cos(-yaw), np.sin(-yaw)
     dx, dy = plant['pose']['x'] - x, plant['pose']['y'] - y
-    grasp = np.array([c * dx - s * dy, s * dx + c * dy, crown + GRIP_HEIGHT - PAD_ABOVE_TCP])
+    grasp = np.array([c * dx - s * dy, s * dx + c * dy, crown + GRIP_HEIGHT - grip_cfg['pad_above_tcp']])
     above = grasp + [0, 0, APPROACH]
     print(f'{pid}: pull-out force {plant["pull_out_force"]:.1f} N, root {root_length:.3f} m, '
           f'grip at {np.round(grasp, 3)} in base_footprint (robot at {x:.3f} {y:.3f} yaw {yaw:.3f})',
@@ -234,14 +276,17 @@ def pick(args):
 
     q = np.array([joints[j] for j in JOINTS])
     q_above = chain.ik(above, q)
-    gripper(OPEN, 1.0)
+    gripper(OPEN_FORCE, 1.0)
     move([q_above], 5.0)
+    where('above')
     down = chain.line(above, grasp, q_above)
     move(down, 4.0)
-    gripper(CLOSED, 2.0)
+    gripper(-grip_cfg['force'], 2.0)
+    where('closed')
     up = chain.line(grasp, grasp + [0, 0, root_length + LIFT_MARGIN], down[-1])
     move(up, 8.0)
-    gripper(CLOSED, 2.0)  # hold, so a slow slip still shows
+    gripper(-grip_cfg['force'], 2.0)  # hold, so a slow slip still shows
+    where('lifted')
 
     outcome = ('pulled out' if 'detached' in events else
                'not pulled out' if 'picked' in events else 'never picked')
@@ -251,10 +296,10 @@ def pick(args):
     return 0 if 'picked' in events else 1
 
 
-def check(urdf):
+def check(urdf, reach):
     """Self-check of the IK on a sideways-mount URDF with the gripper: pick_carrot.py check x.urdf"""
     chain = Chain(urdf)
-    a = np.array([REACH_X, 0.05, 0.05])
+    a = np.array([reach[0], reach[1], 0.05])
     path = chain.line(a + [0, 0, APPROACH], a, chain.ik(a + [0, 0, APPROACH], np.zeros(6)))
     for q, z in zip(path, np.linspace(a[2] + APPROACH, a[2], 11)[1:]):
         m = chain.fk(q)
@@ -268,15 +313,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('mode', choices=['spawn', 'pick', 'check'])
     parser.add_argument('file', help='manifest.json (spawn, pick) or a URDF (check)')
+    parser.add_argument('--robot', choices=sorted(ROBOTS), default='lite6')
     args = parser.parse_args()
     args.manifest = args.file
     if args.mode == 'check':
-        return check(Path(args.file).read_text())
+        return check(Path(args.file).read_text(), ROBOTS[args.robot]['reach'])
     if args.mode == 'spawn':
-        plant, *_ = choose(args.manifest)
-        x, y, yaw = spawn_pose(plant)
+        robot = ROBOTS[args.robot]
+        plant, *_, manifest = choose(args.manifest, robot)
+        x, y, yaw = spawn_pose(manifest, plant, robot['reach'])
         print(f'# {plant["id"]} at {plant["pose"]["x"]:.3f} {plant["pose"]["y"]:.3f}', file=sys.stderr)
-        print(f'x:={x:.3f} y:={y:.3f} yaw:={yaw}')
+        print(f'x:={x:.3f} y:={y:.3f} yaw:={yaw:.4f}')
         return 0
     return pick(args)
 

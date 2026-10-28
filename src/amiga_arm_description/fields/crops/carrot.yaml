@@ -1,0 +1,27 @@
+# pixelfield's carrot (crops/carrot.yaml at the commit pinned in docker/Dockerfile), with the
+# carrots 10 cm apart in the row instead of 4 cm: at 4 cm the gripper's jaws close on the
+# neighbours' leaf stalks and pull those out instead of the target. Real carrots grow 3 to 5 cm
+# apart, so a real picker needs narrower jaws or another approach.
+# Use: pixelfield build <Field Spec> --crops <this folder>
+name: carrot
+planting:                # the Planting Pattern inside one Pixel
+  row_spacing: 0.15      # meters between rows
+  in_row_spacing: 0.10   # meters between Plants in a row (pixelfield: 0.04)
+  margin: 0.04           # meters from Pixel edge to the outermost Plants
+  row_direction: 0.0     # radians, 0 = rows run east-west
+  jitter: 0.01           # meters, random offset per Plant (std dev)
+  missing_rate: 0.08     # fraction of positions with no Plant (failed germination)
+variation:               # sampled per Plant
+  scale: [0.85, 1.15]
+  yaw: [0.0, 6.283]
+  hue_shift: [-0.03, 0.03]
+physics:
+  pull_out_force: [15.0, 26.0]   # newtons, loosened soil (see pixelfield's docs/research/prior-art.md)
+  pull_out_curve:                # pixelfield ADR 0006
+    d_peak: 0.005                # meters of root travel to the peak, guess
+    residual_fraction: 0.3       # force right after the peak, fraction of the peak, guess
+    pull_out_damping: 0.0        # N s/m, speed effect, off until measured
+assets:
+  library: assets/library/carrot  # relative to pixelfield's install
+  generator: carrot      # key in pixelfield's GENERATORS, optional
+  variants: 24

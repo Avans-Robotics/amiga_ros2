@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- The xArm Gripper (G1) for the simulation, as two parallel jaws: its pads stay parallel like
+       the real linkage's, and each jaw squeezes with at most its joint effort limit, the grip force.
+       xarm's own model is the 6-joint linkage, whose 50 Nm drive limit squeezes far harder than
+       the real gripper. Body, finger and knuckle meshes and the TCP (0.172 m from the flange) as in
+       xarm's model; the pads collide as boxes around the fingers' contact faces.
+       finger_joint1/2: distance of each pad face from the centre line, 0 closed, 0.043 open
+       (86 mm stroke). -->
+  <xacro:macro name="xarm_gripper_jaws" params="attach_to grip_force:=30.0">
+    <xacro:property name="pad" value="${dict(width=0.03, thickness=0.01, height=0.04, mass=0.05)}"/>
+    <xacro:property name="pad_z" value="${0.172 - pad['height'] / 2}"/>  <!-- pad centre, tips at the TCP -->
+    <!-- The linkage meshes ride on the jaws at a mid opening (knuckle angle a): a finger keeps its
+         orientation on the real linkage, so it only needs its inner face (0.026 m off its frame)
+         on the jaw face; the knuckles are a off at the ends of the stroke, their roots hidden in
+         the body. xarm's linkage: outer knuckle pivot (0, 0.035, 0.059098), finger frame
+         (0, 0.035465, 0.042039) from it, inner knuckle pivot (0, 0.02, 0.074098). -->
+    <xacro:property name="a" value="0.42"/>
+    <xacro:property name="finger_y" value="${0.035 + 0.035465 * cos(a) - 0.042039 * sin(a)}"/>
+    <xacro:property name="finger_z" value="${0.059098 + 0.035465 * sin(a) + 0.042039 * cos(a)}"/>
+    <xacro:property name="jaw_y" value="${finger_y - 0.026}"/>  <!-- jaw position at angle a -->
+
+    <joint name="gripper_fix" type="fixed">
+      <parent link="${attach_to}"/>
+      <child link="xarm_gripper_base_link"/>
+    </joint>
+    <link name="xarm_gripper_base_link">
+      <xacro:common_link_visual mesh_filename="gripper/xarm/base_link" material_name="White"/>
+      <collision>
+        <origin xyz="0 0 0.047"/>
+        <geometry><box size="0.075 0.102 0.112"/></geometry>  <!-- the mesh's bounding box -->
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0.048"/>
+        <mass value="0.54"/>
+        <inertia ixx="0.0005" ixy="0" ixz="0" iyy="0.0005" iyz="0" izz="0.0004"/>
+      </inertial>
+    </link>
+
+    <xacro:macro name="jaw" params="name side mesh">
+      <link name="${name}">
+        <xacro:common_link_visual mesh_filename="gripper/xarm/${mesh}_finger" material_name="White"
+          origin_xyz="0 ${side * 0.026} ${finger_z - pad_z}"/>
+        <xacro:common_link_visual mesh_filename="gripper/xarm/${mesh}_outer_knuckle" material_name="White"
+          origin_xyz="0 ${side * (0.035 - jaw_y)} ${0.059098 - pad_z}" origin_rpy="${side * a} 0 0"/>
+        <xacro:common_link_visual mesh_filename="gripper/xarm/${mesh}_inner_knuckle" material_name="White"
+          origin_xyz="0 ${side * (0.02 - jaw_y)} ${0.074098 - pad_z}" origin_rpy="${side * a} 0 0"/>
+        <collision>
+          <origin xyz="0 ${side * pad['thickness'] / 2} 0"/>
+          <geometry><box size="${pad['width']} ${pad['thickness']} ${pad['height']}"/></geometry>
+        </collision>
+        <inertial>
+          <mass value="${pad['mass']}"/>
+          <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+        </inertial>
+      </link>
+    </xacro:macro>
+    <xacro:jaw name="xarm_gripper_jaw1" side="1" mesh="left"/>
+    <xacro:jaw name="xarm_gripper_jaw2" side="-1" mesh="right"/>
+
+    <joint name="finger_joint1" type="prismatic">
+      <parent link="xarm_gripper_base_link"/>
+      <child link="xarm_gripper_jaw1"/>
+      <origin xyz="0 0 ${pad_z}"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="0" upper="0.043" effort="${grip_force}" velocity="2"/>
+    </joint>
+    <joint name="finger_joint2" type="prismatic">
+      <parent link="xarm_gripper_base_link"/>
+      <child link="xarm_gripper_jaw2"/>
+      <origin xyz="0 0 ${pad_z}"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="0" upper="0.043" effort="${grip_force}" velocity="2"/>
+    </joint>
+
+    <link name="link_tcp"/>
+    <joint name="joint_tcp" type="fixed">
+      <parent link="xarm_gripper_base_link"/>
+      <child link="link_tcp"/>
+      <origin xyz="0 0 0.172"/>
+    </joint>
+  </xacro:macro>
+
+</robot>
