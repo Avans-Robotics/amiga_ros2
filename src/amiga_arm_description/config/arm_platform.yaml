@@ -24,9 +24,21 @@ arm:
   xyz: [-0.07, 0.0, 0.025]
   rpy: [0.0, 0.0, 3.1416]
 
-# Sideways on the vertical plank's front face, base axis along +X, cable ports up
-# (mount angle 90 in UFactory Studio). Reaches the soil behind the rear axle; the simulation
-# uses it with sideways:=true. To mount the real arm this way, copy it into `arm`.
+# Simulation only, sideways:=true: the platform not turned (vertical plank against the rear
+# cross tube's front face) and the arm on the vertical plank's front face, base axis along +X:
+# it points forward, towards the front cross tube, and reaches the soil between the axles.
+# `platform` here replaces the pose of the platform above.
 arm_sideways:
+  platform: {xyz: [-0.374, 0.0, 0.435], rpy: [0.0, 0.0, 0.0]}
+  xyz: [0.025, 0.0, -0.095]
+  rpy: [0.0, 1.5708, 0.0]
+
+# Simulation option, robot:=xarm6: an xArm 6 (5 kg payload) in the Lite 6 places. Like the Lite 6,
+# it reaches the soil only sideways (with the gripper; upright the base sits too high).
+xarm6:
+  xyz: [-0.07, 0.0, 0.025]
+  rpy: [0.0, 0.0, 3.1416]
+xarm6_sideways:
+  platform: {xyz: [-0.374, 0.0, 0.435], rpy: [0.0, 0.0, 0.0]}
   xyz: [0.025, 0.0, -0.095]
   rpy: [0.0, 1.5708, 0.0]

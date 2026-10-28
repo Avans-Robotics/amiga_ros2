@@ -1,12 +1,13 @@
 """Spawn the Amiga with the arm platform in Gazebo (gz sim): drive it with /cmd_vel, move the arm
-with the Lite 6 trajectory controller.
+with its trajectory controller (lite6_traj_controller, or xarm6_traj_controller with robot:=xarm6).
 
 publish_odom_tf:=false  do not publish odom -> base_footprint (when an EKF publishes it instead)
 rviz:=true              also start RViz (fixed frame odom)
 gz_args:='-s -r empty.sdf'  Gazebo without its window (server only)
-x:=, y:=, yaw:=         spawn pose in the world (pixelfield: in a Path Gap or the Border, not on Plants)
-sideways:=true          arm mounted sideways (arm_sideways in the config), reaches the soil
-gripper:=true           adds the Gripper Lite and its gripper_controller
+x:=, y:=, yaw:=         spawn pose in the world (pixelfield: wheels in the Path Gaps or on the Border, not on Plants)
+robot:=xarm6            an xArm 6 instead of the Lite 6 (simulation option)
+sideways:=true          arm mounted sideways (arm_sideways, xarm6_sideways in the config), reaches the soil
+gripper:=true           adds the arm's gripper and its gripper_controller
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
@@ -24,6 +25,7 @@ def generate_launch_description():
         Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'amiga_arm.urdf.xacro']),
                  ' config:=', LaunchConfiguration('config'),
                  ' fixed:=false gazebo:=true',
+                 ' robot:=', LaunchConfiguration('robot'),
                  ' sideways:=', LaunchConfiguration('sideways'),
                  ' gripper:=', LaunchConfiguration('gripper'),
                  ' ros2_control_plugin:=gz_ros2_control/GazeboSimSystem']),
@@ -34,10 +36,14 @@ def generate_launch_description():
                  arguments=['-topic', 'robot_description', '-name', 'amiga_arm', '-z', '0.05',
                             '-x', LaunchConfiguration('x'), '-y', LaunchConfiguration('y'),
                             '-Y', LaunchConfiguration('yaw')])
+    # A pixelfield world can run slowly while it loads: the default 5 s switch timeout then fails.
+    timeout = ['--switch-timeout', '30']
     controllers = [
-        Node(package='controller_manager', executable='spawner', arguments=[name], parameters=[sim_time])
-        for name in ('joint_state_broadcaster', 'lite6_traj_controller')
-    ] + [Node(package='controller_manager', executable='spawner', arguments=['gripper_controller'],
+        Node(package='controller_manager', executable='spawner', arguments=[name] + timeout,
+             parameters=[sim_time])
+        for name in ('joint_state_broadcaster', [LaunchConfiguration('robot'), '_traj_controller'])
+    ] + [Node(package='controller_manager', executable='spawner',
+              arguments=['gripper_controller'] + timeout,
               parameters=[sim_time], condition=IfCondition(LaunchConfiguration('gripper')))]
 
     return LaunchDescription([
@@ -48,6 +54,7 @@ def generate_launch_description():
         DeclareLaunchArgument('x', default_value='0.0'),
         DeclareLaunchArgument('y', default_value='0.0'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
+        DeclareLaunchArgument('robot', default_value='lite6', choices=['lite6', 'xarm6']),
         DeclareLaunchArgument('sideways', default_value='false'),
         DeclareLaunchArgument('gripper', default_value='false'),
         IncludeLaunchDescription(

@@ -53,6 +53,7 @@ The mount is set by the user of the robot: measure it and enter it in [`src/amig
 | `platform.xyz`, `platform.rpy` | Pose of `platform_link` relative to the Amiga `base_link` |
 | `platform.plank` | Plank size |
 | `arm.xyz`, `arm.rpy` | Pose of the Lite 6 base (`link_base`) relative to `platform_link` |
+| `arm_sideways`, `xarm6`, `xarm6_sideways` | Simulation only: the Lite 6 mounted sideways (`sideways:=true`) and the xArm 6 option (`robot:=xarm6`); a sideways key's own `platform` replaces `platform` there, see [Simulation](simulation.md#picking-a-carrot) |
 
 Examples for `platform`:
 

@@ -4,13 +4,15 @@
   <!-- The Amiga with the arm platform on its base_link (platform xyz/rpy from the config).
        fixed:=true   the Amiga stands fixed on "world" (the floor), the root for RViz and MoveIt
        gazebo:=true  adds the Gazebo drive (use with fixed:=false, so the Amiga can drive)
-       sideways:=true  arm pose from `arm_sideways` in the config instead of `arm`
-       gripper:=true  adds the Gripper Lite (simulation: its controller is in sim_controllers.yaml) -->
+       robot:=xarm6  an xArm 6 instead of the Lite 6 (simulation option), pose from `xarm6` in the config
+       sideways:=true  arm (and platform) pose from `<pose>_sideways` in the config: arm points forward
+       gripper:=true  adds the arm's gripper (simulation: its controller is in sim_controllers.yaml) -->
   <xacro:arg name="config" default="$(find amiga_arm_description)/config/arm_platform.yaml"/>
   <xacro:arg name="ros2_control_plugin" default="uf_robot_hardware/UFRobotSystemHardware"/>
   <xacro:arg name="robot_ip" default="10.95.76.155"/>
   <xacro:arg name="fixed" default="true"/>
   <xacro:arg name="gazebo" default="false"/>
+  <xacro:arg name="robot" default="lite6"/>
   <xacro:arg name="sideways" default="false"/>
   <xacro:arg name="gripper" default="false"/>
 
@@ -31,10 +33,14 @@
     <xacro:amiga_gazebo prefix=""/>
   </xacro:if>
 
-  <xacro:property name="platform" value="${xacro.load_yaml('$(arg config)')['platform']}"/>
+  <xacro:property name="cfg" value="${xacro.load_yaml('$(arg config)')}"/>
+  <xacro:property name="arm_key"
+    value="${('arm' if '$(arg robot)' == 'lite6' else '$(arg robot)') + ('_sideways' if '$(arg sideways)'.lower() in ('true', '1') else '')}"/>
+  <!-- An arm pose can bring its own platform pose (the sideways mounts) -->
+  <xacro:property name="platform" value="${cfg[arm_key].get('platform', cfg['platform'])}"/>
   <xacro:arm_platform parent="base_link"
     xyz="${' '.join(map(str, platform['xyz']))}" rpy="${' '.join(map(str, platform['rpy']))}"
-    config="$(arg config)" arm_key="${'arm_sideways' if '$(arg sideways)'.lower() in ('true', '1') else 'arm'}"
+    config="$(arg config)" robot="$(arg robot)" arm_key="${arm_key}"
     gripper="$(arg gripper)"
     ros2_control_plugin="$(arg ros2_control_plugin)"
     robot_ip="$(arg robot_ip)"/>

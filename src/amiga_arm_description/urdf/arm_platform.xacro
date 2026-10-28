@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <!-- Two planks screwed together at 90 degrees, with a Lite 6 on the vertical one.
+  <!-- Two planks screwed together at 90 degrees, with a UFactory arm (robot: lite6 or xarm6).
        platform_link origin: top front edge of the Amiga cross tube the top plank rests on.
        Geometry and arm pose come from config/arm_platform.yaml. -->
-  <xacro:macro name="arm_platform" params="parent xyz rpy config arm_key gripper ros2_control_plugin robot_ip">
+  <xacro:macro name="arm_platform" params="parent xyz rpy config robot arm_key gripper ros2_control_plugin robot_ip">
     <xacro:property name="cfg" value="${xacro.load_yaml(config)}"/>
     <xacro:property name="plank" value="${cfg['platform']['plank']}"/>
     <xacro:property name="L" value="${plank['length']}"/>
@@ -46,6 +46,20 @@
       <collision><surface><contact><collide_bitmask>0x01</collide_bitmask></contact></surface></collision>
     </gazebo>
 
+    <!-- The arm links as well: leaves push only on the gripper. Arm links in a dense bed pick
+         and push dozens of Plants, which slows the simulation down to a few percent of real time. -->
+    <xacro:macro name="soil_only" params="link">
+      <gazebo reference="${link}">
+        <collision><surface><contact><collide_bitmask>0x01</collide_bitmask></contact></surface></collision>
+      </gazebo>
+    </xacro:macro>
+    <xacro:soil_only link="link1"/>
+    <xacro:soil_only link="link2"/>
+    <xacro:soil_only link="link3"/>
+    <xacro:soil_only link="link4"/>
+    <xacro:soil_only link="link5"/>
+    <xacro:soil_only link="link6"/>
+
     <joint name="platform_joint" type="fixed">
       <parent link="${parent}"/>
       <child link="platform_link"/>
@@ -53,7 +67,7 @@
     </joint>
 
     <xacro:include filename="$(find xarm_description)/urdf/xarm_device_macro.xacro"/>
-    <xacro:xarm_device robot_type="lite" dof="6"
+    <xacro:xarm_device robot_type="${'lite' if robot == 'lite6' else 'xarm'}" dof="6"
       attach_to="platform_link" create_attach_link="false"
       attach_xyz="${' '.join(map(str, arm['xyz']))}"
       attach_rpy="${' '.join(map(str, arm['rpy']))}"
@@ -61,25 +75,36 @@
       ros2_control_params="${'$(find amiga_arm_description)/config/sim_controllers.yaml' if gripper else ''}"
       robot_ip="${robot_ip}"/>
 
-    <!-- Gripper Lite: xarm's links and joints, but not its add_gripper. That one makes finger 2
-         follow finger 1 through a Gazebo Classic style plugin that does not load in gz sim, so
-         here gz_ros2_control mimics finger_joint2 (its URDF <mimic>) instead. -->
+    <!-- Gripper, not through xarm's add_gripper: that one makes the fingers follow each other
+         through a Gazebo Classic style plugin that does not load in gz sim, and its position
+         control did not move the fingers reliably. Here both fingers are effort controlled, so
+         each squeezes with the commanded force, capped by its joint effort limit. They close
+         independently: gz_ros2_control's mimic did not follow an effort controlled finger, and a
+         velocity controlled one squeezed only as hard as the leaves resisted its speed.
+         lite6: xarm's Gripper Lite links (5 N). xarm6: the xArm Gripper as parallel jaws (30 N). -->
     <xacro:if value="${gripper}">
       <xacro:include filename="$(find xarm_description)/urdf/common/common.link.xacro"/>
-      <xacro:include filename="$(find xarm_description)/urdf/gripper/uflite_gripper.urdf.xacro"/>
-      <xacro:uflite_gripper_urdf attach_to="link_eef"/>
+      <xacro:if value="${robot == 'lite6'}">
+        <xacro:include filename="$(find xarm_description)/urdf/gripper/uflite_gripper.urdf.xacro"/>
+        <xacro:uflite_gripper_urdf attach_to="link_eef"/>
+      </xacro:if>
+      <xacro:if value="${robot == 'xarm6'}">
+        <xacro:include filename="$(find amiga_arm_description)/urdf/xarm_gripper_jaws.xacro"/>
+        <xacro:xarm_gripper_jaws attach_to="link_eef"/>
+      </xacro:if>
       <xacro:if value="${ros2_control_plugin == 'gz_ros2_control/GazeboSimSystem'}">
-        <ros2_control name="GripperLiteSystem" type="system">
+        <ros2_control name="GripperSystem" type="system">
           <hardware><plugin>${ros2_control_plugin}</plugin></hardware>
-          <joint name="finger_joint1">
-            <command_interface name="position"/>
-            <command_interface name="velocity"/>
-            <state_interface name="position"/>
-            <state_interface name="velocity"/>
-          </joint>
-          <joint name="finger_joint2">
-            <state_interface name="position"/>
-          </joint>
+          <!-- mimic="false": the gripper URDFs make finger_joint2 mimic finger_joint1 -->
+          <xacro:macro name="finger_joint" params="name">
+            <joint name="${name}" mimic="false">
+              <command_interface name="effort"/>
+              <state_interface name="position"/>
+              <state_interface name="velocity"/>
+            </joint>
+          </xacro:macro>
+          <xacro:finger_joint name="finger_joint1"/>
+          <xacro:finger_joint name="finger_joint2"/>
         </ros2_control>
       </xacro:if>
     </xacro:if>
