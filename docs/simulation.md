@@ -107,7 +107,7 @@ What to expect, in `avans_kas` with the carrots 10 cm apart:
 
 ## Camera
 
-`camera:=true` adds the OAK-D under the front cross tube, looking straight down (its pose is `camera` in [`arm_platform.yaml`](../src/amiga_arm_description/config/arm_platform.yaml), the same for the real robot). It publishes on the topics of the real driver, so perception code runs on both:
+`camera:=true` adds the OAK-D in front of the front cross tube, looking straight down (its pose is `camera` in [`arm_platform.yaml`](../src/amiga_arm_description/config/arm_platform.yaml), the same for the real robot). It publishes on the topics of the real driver, so perception code runs on both:
 
 ```bash
 ros2 launch amiga_arm_description gazebo.launch.py camera:=true rviz:=true
