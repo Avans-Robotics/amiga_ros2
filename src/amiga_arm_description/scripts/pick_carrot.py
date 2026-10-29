@@ -121,11 +121,14 @@ class Chain:
         return m
 
     def ik(self, p, q0):
-        """Joint angles with link_tcp at p and its z axis pointing down: from q0 if that
-        converges, else the solution closest to q0 from random starts."""
+        """Joint angles with link_tcp at p, its z axis pointing down and its y axis (the jaws'
+        closing direction) along base_footprint y, across the bed: the pads' width then lies along
+        the row, clear of the in-row neighbours. From q0 if that converges, else the solution
+        closest to q0 from random starts."""
         def err(q):
             m = self.fk(q)
-            return np.concatenate([p - m[:3, 3], 0.3 * (m[:3, 2] - [0, 0, -1])])  # tool down, not up
+            return np.concatenate([p - m[:3, 3], 0.3 * (m[:3, 2] - [0, 0, -1]),  # tool down, not up
+                                   [0.3 * m[0, 1]]])  # tool y across the row, either sign
 
         def solve(q):
             for _ in range(200):
@@ -133,21 +136,22 @@ class Chain:
                 if np.linalg.norm(e) < 1e-5:
                     return q
                 jac = np.array([(err(q + d) - e) / 1e-6 for d in np.eye(6) * 1e-6]).T
-                q = np.clip(q - jac.T @ np.linalg.solve(jac @ jac.T + 1e-4 * np.eye(6), e),
+                q = np.clip(q - jac.T @ np.linalg.solve(jac @ jac.T + 1e-4 * np.eye(len(e)), e),
                             self.limits[:, 0], self.limits[:, 1])
             return None
+        def near(q):
+            """The same pose with each joint within half a turn of q0: a joint a full turn
+            away takes the wrist the long way round."""
+            w = q0 + (q - q0 + np.pi) % (2 * np.pi) - np.pi
+            return w if np.all((w >= self.limits[:, 0]) & (w <= self.limits[:, 1])) else q
         q0 = np.array(q0, dtype=float)
         q = solve(q0)
         if q is not None:
-            return q
+            return near(q)
         rng = np.random.default_rng(0)
-        found = [q for q in (solve(rng.uniform(*self.limits.T)) for _ in range(30)) if q is not None]
+        found = [near(q) for q in (solve(rng.uniform(*self.limits.T)) for _ in range(30)) if q is not None]
         if not found:
             raise RuntimeError(f'no IK solution for {np.round(p, 3)}')
-        # same pose, nearest to q0: a joint a full turn away takes the wrist the long way round
-        wrapped = [q0 + (q - q0 + np.pi) % (2 * np.pi) - np.pi for q in found]
-        found = [w if np.all((w >= self.limits[:, 0]) & (w <= self.limits[:, 1])) else q
-                 for w, q in zip(wrapped, found)]
         return min(found, key=lambda q: np.abs(q - q0).sum())
 
     def line(self, a, b, q0, n=10):
@@ -305,6 +309,7 @@ def check(urdf, reach):
         m = chain.fk(q)
         assert np.allclose(m[:3, 3], [a[0], a[1], z], atol=1e-4), m[:3, 3]
         assert m[2, 2] < -0.9999, m[:3, 2]
+        assert abs(m[0, 1]) < 1e-3, m[:3, 1]  # jaws close across the row
     print('ik ok')
     return 0
 

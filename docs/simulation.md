@@ -102,9 +102,9 @@ Gripper: `/gripper_controller/commands` (`std_msgs/msg/Float64MultiArray`), one 
 
 What to expect, in `avans_kas` with the carrots 10 cm apart:
 
-- **xArm 6**: carrot `r6c1-041` (16.7 N, root 17 cm), pulled out in two of three runs; in the third the root came up 12 cm and the grip slipped. The carrot is gripped 0.10 m ahead of `base_footprint` and 0.21 m beside the bed's centre line: on the centre line, the vertical path crosses a wrist singularity of the sideways xArm 6. (In `amiga_10x10`, carrot `r2c2-004`, 24.7 N: three of three.)
+- **xArm 6**: carrot `r6c1-041` (16.7 N, root 17 cm), pulled out in three of three runs, its neighbours in the row left in the soil. The jaws close across the row, so the pads' width lies along it, clear of the neighbours; jaws closing along the row caught a neighbour's leaves in one of three runs and lifted it 4 cm. On its way to the carrot the gripper sweeps through the leaves of `r6c1-039`, 20 cm further along the row, which comes up about 5 mm. The carrot is gripped 0.10 m ahead of `base_footprint` and 0.21 m beside the bed's centre line: on the centre line, the vertical path crosses a wrist singularity of the sideways xArm 6. (In `amiga_10x10`, carrot `r2c2-004`, 24.7 N: three of three.)
 - **Lite 6**: carrot `r3c1-034` (21.2 N, root 15 cm), not pulled out: the grip slipped before the root moved. The Lite 6's wrist joints are weak (1.36 Nm on joints 4 and 6, UFactory's motor values), so the leaves can turn the gripper off vertical on the way down. The real Gripper Lite is specified at 5 N and the real Lite 6 at 600 g payload, both below the 15 to 26 N a carrot needs.
-- With pixelfield's own 4 cm spacing, the xArm 6 did not pull its carrot out in five runs: the jaws close on the neighbours' leaves too and pull those out instead.
+- With pixelfield's own 4 cm spacing, the xArm 6 pulls its carrot out, but the jaws close on the leaves of the neighbour 4 cm away too and pull that one up as well (7 cm).
 
 ## Camera
 
