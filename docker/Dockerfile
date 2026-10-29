@@ -69,7 +69,7 @@ RUN git clone -b v0.6.0 --depth 1 https://github.com/Avans-Robotics/amiga_descri
 RUN apt-get update && apt-get install -y --no-install-recommends python3-pip \
  && rm -rf /var/lib/apt/lists/* \
  && git init -q /opt/pixelfield \
- && git -C /opt/pixelfield fetch -q --depth 1 https://github.com/Avans-Robotics/AgriSim.git c37045bc65a44b0646f8ebedfb391f13bf11c214 \
+ && git -C /opt/pixelfield fetch -q --depth 1 https://github.com/Avans-Robotics/AgriSim.git ef5c093874754c04e538a21e9dd2c1fdc4035e08 \
  && git -C /opt/pixelfield checkout -q FETCH_HEAD \
  && pip3 install --break-system-packages -e /opt/pixelfield \
  && source /opt/ros/jazzy/setup.bash \

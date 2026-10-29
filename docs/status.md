@@ -25,6 +25,7 @@ ROS 2:
 - MoveIt: fix the xarm static TF rpy order properly instead of dropping the arm yaw.
 - MoveIt: planks and the Amiga as collision objects (currently the arm only).
 - Simulation: tune wheel friction against the real robot; add an IMU when someone needs it.
+- Simulation pick: on its way to the carrot the gripper sweeps through the leaves of a plant 20 cm along the row (`r6c1-039` in `avans_kas`: up 5 mm at 23.5 N of its 24 N). Approach from higher if it ever pulls one out.
 
 Small:
 
