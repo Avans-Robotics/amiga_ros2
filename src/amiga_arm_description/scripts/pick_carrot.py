@@ -9,7 +9,7 @@ pose from Gazebo, the joint angles from a small IK on the robot_description.
   --robot xarm6                          spawn and check: for an xArm 6 (default lite6); pick reads
                                          the robot from the running simulation
 
-The Field needs Path Gaps for the Amiga's wheels (examples/amiga_10x10.yaml): the Amiga straddles
+The Field needs Path Gaps for the Amiga's wheels (examples/avans_kas.yaml): the Amiga straddles
 the bed between the first two gaps, heading north, and the arm picks under it.
 
 `pick` prints what the Plant did (/world/pixelfield/pixelfield/pull_out) and exits 0 once the
@@ -48,7 +48,7 @@ def bed_x(manifest):
     """x of the Amiga's centre straddling the bed between the Field's first two Path Gaps."""
     gaps = manifest['field']['path_gaps']
     if len(gaps) < 2:
-        raise SystemExit('the Field has no Path Gaps for the wheels: use one like amiga_10x10.yaml')
+        raise SystemExit('the Field has no Path Gaps for the wheels: use one like avans_kas.yaml')
     return sum(sum(gap) / 2 for gap in gaps[:2]) / 2
 
 

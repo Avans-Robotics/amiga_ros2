@@ -60,7 +60,7 @@ RUN source /opt/ros/jazzy/setup.bash \
 
 # --- Amiga robot model (pinned tag) ---
 # Own layer after the big build, so bumping the tag does not rebuild xarm.
-RUN git clone -b v0.5.1 --depth 1 https://github.com/Avans-Robotics/amiga_description.git src/amiga_description \
+RUN git clone -b v0.6.0 --depth 1 https://github.com/Avans-Robotics/amiga_description.git src/amiga_description \
  && source /opt/ros/jazzy/setup.bash \
  && colcon build --symlink-install --packages-select amiga_description
 
@@ -69,7 +69,7 @@ RUN git clone -b v0.5.1 --depth 1 https://github.com/Avans-Robotics/amiga_descri
 RUN apt-get update && apt-get install -y --no-install-recommends python3-pip \
  && rm -rf /var/lib/apt/lists/* \
  && git init -q /opt/pixelfield \
- && git -C /opt/pixelfield fetch -q --depth 1 https://github.com/Avans-Robotics/AgriSim.git daed17a2782c95bfb7b4d2288568da20c392fff4 \
+ && git -C /opt/pixelfield fetch -q --depth 1 https://github.com/Avans-Robotics/AgriSim.git c37045bc65a44b0646f8ebedfb391f13bf11c214 \
  && git -C /opt/pixelfield checkout -q FETCH_HEAD \
  && pip3 install --break-system-packages -e /opt/pixelfield \
  && source /opt/ros/jazzy/setup.bash \
