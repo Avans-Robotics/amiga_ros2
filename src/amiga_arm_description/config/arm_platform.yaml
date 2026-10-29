@@ -24,6 +24,15 @@ arm:
   xyz: [-0.07, 0.0, 0.025]
   rpy: [0.0, 0.0, 3.1416]
 
+camera:
+  # OAK-D-W-PoE (camera:=true), its depthai base frame (on the front face, at the colour lens) relative to
+  # base_link. Current mount: under the middle of the front cross tube, looking straight down,
+  # image top towards the front. Estimate from the amiga_description dimensions: front cross
+  # tube centred at x 0.394, bottom at z 0.395; the camera body is 0.030 deep. Measure and update.
+  model: OAK-D-POE  # depthai_descriptions model: the W-PoE has the same housing
+  xyz: [0.394, 0.0, 0.365]
+  rpy: [0.0, 1.5708, 0.0]
+
 # Simulation only, sideways:=true: the platform not turned (vertical plank against the rear
 # cross tube's front face) and the arm on the vertical plank's front face, base axis along +X:
 # it points forward, towards the front cross tube, and reaches the soil between the axles.

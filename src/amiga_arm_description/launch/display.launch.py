@@ -2,6 +2,7 @@
 
 use_real_arm:=false  joint sliders (joint_state_publisher_gui)
 use_real_arm:=true   mirror the real arm from /ufactory/joint_states (start the xArm driver separately)
+camera:=true         adds the OAK-D and its frames (start its driver separately, see docs/camera.md)
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -17,11 +18,13 @@ def generate_launch_description():
     use_real_arm = LaunchConfiguration('use_real_arm')
     robot_description = ParameterValue(
         Command(['xacro ', PathJoinSubstitution([pkg, 'urdf', 'amiga_arm.urdf.xacro']),
-                 ' config:=', LaunchConfiguration('config')]),
+                 ' config:=', LaunchConfiguration('config'),
+                 ' camera:=', LaunchConfiguration('camera')]),
         value_type=str)
 
     return LaunchDescription([
         DeclareLaunchArgument('use_real_arm', default_value='false'),
+        DeclareLaunchArgument('camera', default_value='false'),
         DeclareLaunchArgument('config', default_value=PathJoinSubstitution([pkg, 'config', 'arm_platform.yaml'])),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'robot_description': robot_description}]),

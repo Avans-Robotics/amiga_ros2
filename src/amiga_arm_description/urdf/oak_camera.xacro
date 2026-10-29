@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- The Luxonis OAK-D-W-PoE: depthai's camera frames (camera name "oak", the frames its driver
+       stamps images with), pose from `camera` in config/arm_platform.yaml.
+       gazebo: an RGB-D camera on the colour camera, gazebo.launch.py bridges it to the driver's
+       topics. Colour camera as the IMX378 wide variant (95 deg horizontal), at the driver's
+       default 1280 x 720; depth aligned to it, as the driver publishes it. Rendered by the world's
+       Sensors system (pixelfield worlds and worlds/empty.sdf have one). -->
+  <xacro:macro name="oak_camera" params="parent config gazebo">
+    <xacro:property name="cam" value="${xacro.load_yaml(config)['camera']}"/>
+    <xacro:include filename="$(find depthai_descriptions)/urdf/include/depthai_macro.urdf.xacro"/>
+    <xacro:depthai_camera camera_name="oak" camera_model="${cam['model']}" parent="${parent}"
+      base_frame="oak" simulation="${gazebo}"
+      cam_pos_x="${cam['xyz'][0]}" cam_pos_y="${cam['xyz'][1]}" cam_pos_z="${cam['xyz'][2]}"
+      cam_roll="${cam['rpy'][0]}" cam_pitch="${cam['rpy'][1]}" cam_yaw="${cam['rpy'][2]}"/>
+
+    <xacro:if value="${gazebo}">
+      <gazebo reference="oak_rgb_camera_frame">
+        <sensor name="oak" type="rgbd_camera">
+          <topic>oak</topic>
+          <gz_frame_id>oak_rgb_camera_optical_frame</gz_frame_id>
+          <update_rate>10</update_rate>  <!-- the driver runs at 30 Hz; 10 keeps the sim fast -->
+          <camera>
+            <horizontal_fov>1.658</horizontal_fov>
+            <image><width>1280</width><height>720</height><format>R8G8B8</format></image>
+            <clip><near>0.05</near><far>20.0</far></clip>
+            <depth_camera><clip><near>0.2</near><far>10.0</far></clip></depth_camera>
+          </camera>
+        </sensor>
+      </gazebo>
+    </xacro:if>
+  </xacro:macro>
+
+</robot>
