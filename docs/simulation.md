@@ -83,26 +83,26 @@ Two arms can be simulated:
 colcon build --symlink-install --packages-select amiga_arm_description
 source install/setup.bash
 ROBOT=xarm6   # or lite6
-pixelfield build /opt/pixelfield/examples/amiga_10x10.yaml -o ~/fields/amiga_10x10 \
-  --crops $(ros2 pkg prefix --share amiga_arm_description)/fields/crops
-SPAWN=$(ros2 run amiga_arm_description pick_carrot.py spawn ~/fields/amiga_10x10/manifest.json --robot $ROBOT)
-ros2 launch amiga_arm_description gazebo.launch.py gz_args:="-r $HOME/fields/amiga_10x10/world.sdf" robot:=$ROBOT sideways:=true gripper:=true $SPAWN
+pixelfield build /opt/pixelfield/examples/avans_kas.yaml -o ~/fields/avans_kas \
+  --set carrot.planting.in_row_spacing=0.10
+SPAWN=$(ros2 run amiga_arm_description pick_carrot.py spawn ~/fields/avans_kas/manifest.json --robot $ROBOT)
+ros2 launch amiga_arm_description gazebo.launch.py gz_args:="-r $HOME/fields/avans_kas/world.sdf" robot:=$ROBOT sideways:=true gripper:=true $SPAWN
 ```
 
-The `spawn` step chooses the carrot and prints the spawn pose (`x:=... y:=... yaw:=...`) that puts the Amiga on the bed between the first two paths, wheels in the paths on both sides and heading along the bed, with that carrot under the arm. The Field needs paths between its beds (Path Gaps), as `amiga_10x10` has. `--crops` plants the carrots 10 cm apart in the row instead of pixelfield's 4 cm ([`fields/crops/carrot.yaml`](../src/amiga_arm_description/fields/crops/carrot.yaml)): at 4 cm the jaws close on the neighbours' leaves and pull those out instead. Real carrots grow 3 to 5 cm apart, so a real picker needs narrower jaws or another approach. In a second terminal (`pick` reads the robot from the running simulation):
+The `spawn` step chooses the carrot and prints the spawn pose (`x:=... y:=... yaw:=...`) that puts the Amiga on the bed between the first two paths, wheels in the paths on both sides and heading along the bed, with that carrot under the arm. `avans_kas` is the competition bed in the Avans greenhouse: 3 x 8 Pixels of 0.9 m, one Crop each, with paths for the wheels between the columns, pavers around it and the greenhouse for looks. Any Field with paths between its beds (Path Gaps) works, for example `amiga_10x10`. `--set` plants the carrots 10 cm apart in the row instead of pixelfield's 4 cm (the Field's `manifest.json` records it): at 4 cm the jaws close on the neighbours' leaves and pull those out instead. Real carrots grow 3 to 5 cm apart, so a real picker needs narrower jaws or another approach. In a second terminal (`pick` reads the robot from the running simulation):
 
 ```bash
-ros2 run amiga_arm_description pick_carrot.py pick ~/fields/amiga_10x10/manifest.json
+ros2 run amiga_arm_description pick_carrot.py pick ~/fields/avans_kas/manifest.json
 ```
 
 It prints where the gripper actually is after each step and ends with a `RESULT` line: pulled out, or not pulled out with how far the root came up (`peak d`; the carrot comes free once d reaches its root length). Lines starting with `trajectory: Aborted` are the arm controller missing its goal tolerance; the script carries on. Restart the launch before the next pick: the carrot stays picked. A pick takes about a minute; the simulation slows down while the gripper squeezes a carrot's leaves.
 
 Gripper: `/gripper_controller/commands` (`std_msgs/msg/Float64MultiArray`), one force in N per finger: positive opens, negative squeezes, for example `[-30.0, -30.0]`. Each finger is capped at its gripper's force (5 N or 30 N). The fingers move independently in the simulation, so one can close further than the other; the real grippers' linkage keeps them symmetric.
 
-What to expect, in `amiga_10x10` with the carrots 10 cm apart:
+What to expect, in `avans_kas` with the carrots 10 cm apart:
 
-- **xArm 6**: carrot `r2c2-004` (24.7 N, root 16 cm), pulled out in three of three runs. The carrot is gripped 0.10 m ahead of `base_footprint` and 0.12 m beside the bed's centre line: on the centre line, the vertical path crosses a wrist singularity of the sideways xArm 6.
-- **Lite 6**: carrot `r2c3-013` (25.9 N, root 14 cm), not pulled out: the root came up 5 mm and the grip slipped. The Lite 6's wrist joints are weak (1.36 Nm on joints 4 and 6, UFactory's motor values), so the leaves turn the gripper about 20 degrees off vertical on the way down. The real Gripper Lite is specified at 5 N and the real Lite 6 at 600 g payload, both below the 15 to 26 N a carrot needs.
+- **xArm 6**: carrot `r6c1-041` (16.7 N, root 17 cm), pulled out in two of three runs; in the third the root came up 12 cm and the grip slipped. The carrot is gripped 0.10 m ahead of `base_footprint` and 0.21 m beside the bed's centre line: on the centre line, the vertical path crosses a wrist singularity of the sideways xArm 6. (In `amiga_10x10`, carrot `r2c2-004`, 24.7 N: three of three.)
+- **Lite 6**: carrot `r3c1-034` (21.2 N, root 15 cm), not pulled out: the grip slipped before the root moved. The Lite 6's wrist joints are weak (1.36 Nm on joints 4 and 6, UFactory's motor values), so the leaves can turn the gripper off vertical on the way down. The real Gripper Lite is specified at 5 N and the real Lite 6 at 600 g payload, both below the 15 to 26 N a carrot needs.
 - With pixelfield's own 4 cm spacing, the xArm 6 did not pull its carrot out in five runs: the jaws close on the neighbours' leaves too and pull those out instead.
 
 ## Topics
@@ -123,7 +123,7 @@ Running your own localization (an EKF) that publishes `odom` to `base_footprint`
 - **Wheel odometry drifts when turning.** The Amiga is a skid steer: its wheels slide sideways when it turns. With the arm on the back, it turns around a point near the rear axle instead of its centre, while the wheel odometry assumes the centre. Driving straight is accurate. The real robot behaves the same way, which is why localization fuses the odometry with an IMU or GNSS.
 - Wheel friction is a setting in the Amiga model ([amiga_description](https://github.com/Avans-Robotics/amiga_description), `amiga.gazebo.xacro`); it is not tuned against the real robot yet.
 - Crops come from pixelfield (see [Picking a carrot](#picking-a-carrot)). There are no sensors or camera in the simulation yet.
-- Keep the wheels off the crops (drive in the paths): the chassis and wheels touch Plants and slow the simulation down a lot. The arm platform and the arm links pass through Plants; only the gripper touches them.
+- The Amiga's chassis and wheels, the arm platform and the arm links pass through Plants (collide bit 0 only); only the gripper touches them. The wheels still belong in the paths: on a real bed they would crush the crops.
 
 ## Without a GPU
 
