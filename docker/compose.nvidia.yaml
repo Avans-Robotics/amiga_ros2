@@ -1,0 +1,13 @@
+# Laptop with an NVIDIA GPU, on top of compose.sim.yaml (needs the NVIDIA Container Toolkit):
+#   docker compose -f compose.yaml -f compose.sim.yaml -f compose.nvidia.yaml up -d
+# Gazebo and RViz render on the NVIDIA GPU: windows through PRIME render offload, the simulated
+# camera through NVIDIA's EGL. /dev/dri (compose.sim.yaml) stays mapped for the desktop's GPU.
+services:
+  ros:
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - __NV_PRIME_RENDER_OFFLOAD=1
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json

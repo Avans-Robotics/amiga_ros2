@@ -6,6 +6,7 @@ Drive the Amiga and move the Lite 6 in Gazebo on your own laptop. The simulated 
 
 - A laptop with Ubuntu (24.04 tested) and [Docker](https://docs.docker.com/engine/install/ubuntu/).
 - A GPU that drives your desktop (Intel or AMD with Mesa works). Without one, run Gazebo without its window, see [Without a GPU](#without-a-gpu).
+- A laptop with an NVIDIA GPU: install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) and add `-f compose.nvidia.yaml` to every `docker compose` command below. Without it, the simulated camera (`camera:=true`) freezes the simulation on such a laptop.
 
 ## Starting
 
