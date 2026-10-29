@@ -34,6 +34,9 @@ camera:
   model: OAK-D-POE  # depthai_descriptions model: the W-PoE has the same housing
   xyz: [0.544, 0.0, 0.315]
   rpy: [0.0, 1.5708, 0.0]
+  # The short tube the camera hangs under (drawn only, no collision): centre and size of a box
+  # relative to base_link, under the front cross tube and running forward past the camera.
+  tube: {xyz: [0.479, 0.0, 0.375], size: [0.21, 0.04, 0.04]}
 
 # Simulation only, sideways:=true: the platform not turned (vertical plank against the rear
 # cross tube's front face) and the arm on the vertical plank's front face, base axis along +X:
