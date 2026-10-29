@@ -3,11 +3,13 @@ with its trajectory controller (lite6_traj_controller, or xarm6_traj_controller 
 
 publish_odom_tf:=false  do not publish odom -> base_footprint (when an EKF publishes it instead)
 rviz:=true              also start RViz (fixed frame odom)
-gz_args:='-s -r empty.sdf'  Gazebo without its window (server only)
+gz_args:='-s -r empty.sdf'  Gazebo without its window (server only); the default world is
+                        worlds/empty.sdf, Gazebo's empty world with the Sensors system the camera needs
 x:=, y:=, yaw:=         spawn pose in the world (pixelfield: wheels in the Path Gaps or on the Border, not on Plants)
 robot:=xarm6            an xArm 6 instead of the Lite 6 (simulation option)
 sideways:=true          arm mounted sideways (arm_sideways, xarm6_sideways in the config), reaches the soil
 gripper:=true           adds the arm's gripper and its gripper_controller
+camera:=true            adds the OAK-D, on the topics of its real driver (/oak/rgb/..., /oak/stereo/...)
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
@@ -28,6 +30,7 @@ def generate_launch_description():
                  ' robot:=', LaunchConfiguration('robot'),
                  ' sideways:=', LaunchConfiguration('sideways'),
                  ' gripper:=', LaunchConfiguration('gripper'),
+                 ' camera:=', LaunchConfiguration('camera'),
                  ' ros2_control_plugin:=gz_ros2_control/GazeboSimSystem']),
         value_type=str)
     sim_time = {'use_sim_time': True}
@@ -50,13 +53,14 @@ def generate_launch_description():
         DeclareLaunchArgument('config', default_value=PathJoinSubstitution([pkg, 'config', 'arm_platform.yaml'])),
         DeclareLaunchArgument('publish_odom_tf', default_value='true'),
         DeclareLaunchArgument('rviz', default_value='false'),
-        DeclareLaunchArgument('gz_args', default_value='-r empty.sdf'),
+        DeclareLaunchArgument('gz_args', default_value=['-r ', PathJoinSubstitution([pkg, 'worlds', 'empty.sdf'])]),
         DeclareLaunchArgument('x', default_value='0.0'),
         DeclareLaunchArgument('y', default_value='0.0'),
         DeclareLaunchArgument('yaw', default_value='0.0'),
         DeclareLaunchArgument('robot', default_value='lite6', choices=['lite6', 'xarm6']),
         DeclareLaunchArgument('sideways', default_value='false'),
         DeclareLaunchArgument('gripper', default_value='false'),
+        DeclareLaunchArgument('camera', default_value='false'),
         IncludeLaunchDescription(
             PathJoinSubstitution([FindPackageShare('ros_gz_sim'), 'launch', 'gz_sim.launch.py']),
             launch_arguments={'gz_args': LaunchConfiguration('gz_args')}.items()),
@@ -74,6 +78,22 @@ def generate_launch_description():
              parameters=[sim_time],
              arguments=['/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'],
              condition=IfCondition(LaunchConfiguration('publish_odom_tf'))),
+        # The OAK-D, on the topic names of depthai_ros_driver: colour, and depth aligned to it.
+        # One camera_info for both, as the simulated depth comes from the colour camera.
+        Node(package='ros_gz_bridge', executable='parameter_bridge', name='oak_bridge',
+             parameters=[sim_time],
+             arguments=['/oak/image@sensor_msgs/msg/Image[gz.msgs.Image',
+                        '/oak/depth_image@sensor_msgs/msg/Image[gz.msgs.Image',
+                        '/oak/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'],
+             remappings=[('/oak/image', '/oak/rgb/image_raw'),
+                         ('/oak/depth_image', '/oak/stereo/image_raw'),
+                         ('/oak/camera_info', '/oak/rgb/camera_info')],
+             condition=IfCondition(LaunchConfiguration('camera'))),
+        Node(package='ros_gz_bridge', executable='parameter_bridge', name='oak_depth_info_bridge',
+             parameters=[sim_time],
+             arguments=['/oak/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo'],
+             remappings=[('/oak/camera_info', '/oak/stereo/camera_info')],
+             condition=IfCondition(LaunchConfiguration('camera'))),
         spawn,
         RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=controllers)),
         Node(package='rviz2', executable='rviz2', parameters=[sim_time],

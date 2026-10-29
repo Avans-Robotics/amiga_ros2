@@ -6,7 +6,8 @@
        gazebo:=true  adds the Gazebo drive (use with fixed:=false, so the Amiga can drive)
        robot:=xarm6  an xArm 6 instead of the Lite 6 (simulation option), pose from `xarm6` in the config
        sideways:=true  arm (and platform) pose from `<pose>_sideways` in the config: arm points forward
-       gripper:=true  adds the arm's gripper (simulation: its controller is in sim_controllers.yaml) -->
+       gripper:=true  adds the arm's gripper (simulation: its controller is in sim_controllers.yaml)
+       camera:=true   adds the OAK-D, pose from `camera` in the config (gazebo:=true: a simulated camera) -->
   <xacro:arg name="config" default="$(find amiga_arm_description)/config/arm_platform.yaml"/>
   <xacro:arg name="ros2_control_plugin" default="uf_robot_hardware/UFRobotSystemHardware"/>
   <xacro:arg name="robot_ip" default="10.95.76.155"/>
@@ -15,6 +16,7 @@
   <xacro:arg name="robot" default="lite6"/>
   <xacro:arg name="sideways" default="false"/>
   <xacro:arg name="gripper" default="false"/>
+  <xacro:arg name="camera" default="false"/>
 
   <xacro:include filename="$(find amiga_description)/urdf/amiga.xacro"/>
   <xacro:include filename="$(find amiga_arm_description)/urdf/arm_platform.xacro"/>
@@ -44,5 +46,10 @@
     gripper="$(arg gripper)"
     ros2_control_plugin="$(arg ros2_control_plugin)"
     robot_ip="$(arg robot_ip)"/>
+
+  <xacro:if value="$(arg camera)">
+    <xacro:include filename="$(find amiga_arm_description)/urdf/oak_camera.xacro"/>
+    <xacro:oak_camera parent="base_link" config="$(arg config)" gazebo="$(arg gazebo)"/>
+  </xacro:if>
 
 </robot>

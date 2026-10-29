@@ -20,11 +20,11 @@ Network and access:
 
 ROS 2:
 
-- URDF: OAK-D on the Amiga model (depthai_camera macro), pose configurable from the YAML.
+- OAK-D in the URDF (`camera:=true`): check it on the robot with its driver (see [Camera](camera.md)) and measure its pose (`camera.xyz`, currently an estimate).
 - Measure the platform pose on the Amiga (`platform.xyz`, currently an estimate from the model dimensions) and check the Amiga with the arm in RViz.
 - MoveIt: fix the xarm static TF rpy order properly instead of dropping the arm yaw.
 - MoveIt: planks and the Amiga as collision objects (currently the arm only).
-- Simulation: tune wheel friction against the real robot; add the OAK-D and an IMU when someone needs them.
+- Simulation: tune wheel friction against the real robot; add an IMU when someone needs it.
 
 Small:
 
